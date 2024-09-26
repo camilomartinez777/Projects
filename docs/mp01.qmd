@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Introduction 
+## Introduction  
 
 This project investigates the fiscal characteristics of major U.S. public transit systems using data from the National Transit Database (NTD). Our analysis focuses on fare revenues, operating expenses, vehicle miles traveled (VRM), and unlinked passenger trips (UPT) across various transit systems and modes. The goal is to evaluate system efficiency through metrics like farebox recovery, expenses per trip, and total trips taken, helping to identify top-performing agencies and modes.
 
