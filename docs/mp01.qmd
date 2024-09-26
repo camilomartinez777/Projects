@@ -5,6 +5,7 @@ editor: visual
 ---
 
 ## Introduction
+
 This project investigates the fiscal characteristics of major U.S. public transit systems using data from the National Transit Database (NTD). Our analysis focuses on fare revenues, operating expenses, vehicle miles traveled (VRM), and unlinked passenger trips (UPT) across various transit systems and modes. The goal is to evaluate system efficiency through metrics like farebox recovery, expenses per trip, and total trips taken, helping to identify top-performing agencies and modes.
 
 ## Data Sources
@@ -163,7 +164,6 @@ We can improve the readability of the table by adding some formatting options:
 
 1.  We want to change the name UZA Name to metro_area.**(Task 1)**
 
-
 ```{r}
 USAGE <- USAGE |>
     rename(metro_area = `UZA Name`)
@@ -186,8 +186,8 @@ gt(unique_modes) |>
   tab_header(title = "Unique Modes in USAGE Dataset")
 
 ```
-Then I'LL replace the codes with the corresponding mode names:**(Task 2)**
 
+Then I'LL replace the codes with the corresponding mode names:**(Task 2)**
 
 ```{r}
 
@@ -215,7 +215,7 @@ USAGE <- USAGE |>
   ))
 ```
 
-Now, we'll check the table again to see the changes: 
+Now, we'll check the table again to see the changes:
 
 ```{r}
 if(!require("DT")) install.packages("DT")
@@ -226,11 +226,7 @@ sample_n(USAGE, 1000) |>
     DT::datatable()
 ```
 
-Now, It looks a little better; but we want to polish it even more. Therefore we are changing:
--NTD ID to Transit_ID
--3 Mode to Service_Mode
--UPT to Passenger_Trips
--VRM to Vehicle_Miles
+Now, It looks a little better; but we want to polish it even more. Therefore we are changing: -NTD ID to Transit_ID -3 Mode to Service_Mode -UPT to Passenger_Trips -VRM to Vehicle_Miles
 
 ```{r}
 library(dplyr)
@@ -246,7 +242,8 @@ USAGE <- USAGE |>
     Passenger_Trips = UPT,       
     Vehicle_Miles = VRM          
   )
-```    
+```
+
 ```{r}
 if(!require("DT")) install.packages("DT")
 library(DT)
@@ -258,7 +255,7 @@ sample_n(USAGE, 1000) |>
 
 Now, we can proceed to the analysis of the data, based on specific question:**(Task 3)**
 
-1. What transit agency had the most total VRM in our data set?
+1.  What transit agency had the most total VRM in our data set?
 
 ```{r}
 
@@ -271,7 +268,6 @@ Usage_by_agency <- USAGE |>
 gt(Usage_by_agency) |>
   tab_header(title = "Usage by Agency")
 ```
-
 
 2.What transit mode had the most total VRM in our data set?
 
@@ -288,7 +284,8 @@ gt(Usage_by_mode) |>
 
 
 ```
-3. How many trips were taken on the NYC Subway (Heavy Rail) in May 2024?
+
+3.  How many trips were taken on the NYC Subway (Heavy Rail) in May 2024?
 
 ```{r}
 
@@ -314,7 +311,8 @@ NYC_Subway |>
 
 
 ```
-5. How much did NYC subway ridership fall between April 2019 and April 2020?
+
+5.  How much did NYC subway ridership fall between April 2019 and April 2020?
 
 ```{r}
 # Filter and summarize ridership for April 2019
@@ -348,7 +346,7 @@ data.frame(
 
 Now we can Add 3 more interesting transit facts **(Task 4)**
 
-1. Top 5 Agencies with the Highest Average Passenger Trips per Month
+1.  Top 5 Agencies with the Highest Average Passenger Trips per Month
 
 ```{r}
 top_agencies_by_trips <- USAGE |>
@@ -361,7 +359,8 @@ top_agencies_by_trips |>
   gt() |>
   tab_header(title = "Top 5 Agencies by Average Passenger Trips per Month")
 ```
-2. Top 5 Agencies with the Longest Total Vehicle Miles
+
+2.  Top 5 Agencies with the Longest Total Vehicle Miles
 
 ```{r}
 
@@ -378,7 +377,8 @@ top_agencies_by_miles_2020 |>
   tab_header(title = "Top 5 Agencies with the Longest Total Vehicle Miles in 2020")
 
 ```
-3. Top 5 service modes with the highest average passenger trips per month
+
+3.  Top 5 service modes with the highest average passenger trips per month
 
 ```{r}
 
@@ -394,9 +394,7 @@ top_modes_by_trips |>
 
 ```
 
-Now, we want to unify the two datasets to analyze the financials of the usage.**(Task 5)**'
-To do that, we will have to merge the `FINANCIALS` and `USAGE` datasets on the `NTD ID` and `Mode` columns.
-First, we need create a new table, taking in consideration the sum total of UPT (Passager_Trips) and VRM (Vehicle_miles) for 2022.
+Now, we want to unify the two datasets to analyze the financials of the usage.**(Task 5)**' To do that, we will have to merge the `FINANCIALS` and `USAGE` datasets on the `NTD ID` and `Mode` columns. First, we need create a new table, taking in consideration the sum total of UPT (Passager_Trips) and VRM (Vehicle_miles) for 2022.
 
 ```{r}
 USAGE_2022_ANNUAL <- USAGE |>
@@ -419,8 +417,8 @@ USAGE_2022_ANNUAL |>
 
 ```
 
+We have to make sure that Mode has the same format in both datasets before merging them. We will use the same code as before to standardize the Mode column in the `FINANCIALS` dataset.
 
-We have to make sure that Mode has the same format in both datasets before merging them. We will use the same code as before to standardize the Mode column in the `FINANCIALS` dataset. 
 ```{r}
 
 FINANCIALS <- FINANCIALS |>
@@ -459,9 +457,7 @@ FINANCIALS |>
 
 ```
 
-
 Once we have the `USAGE_2022_ANNUAL` dataset, we can merge it with the `FINANCIALS` dataset to create a new dataset that includes both financial and usage data for 2022.
-
 
 ```{r}
 USAGE_AND_FINANCIALS <- left_join(USAGE_2022_ANNUAL, 
@@ -478,11 +474,9 @@ USAGE_AND_FINANCIALS |>
 
 ```
 
-
-
 Based on this new dataset **USAGE_AND_FINANCIALS** we can answer the following questions: **(Task 6)**
 
-1. Which transit system (agency and mode) had the most UPT in 2022?
+1.  Which transit system (agency and mode) had the most UPT in 2022?
 
 ```{r}
 # Transit system with the most UPT in 2022
@@ -497,7 +491,9 @@ most_upt |>
   tab_header(title = "Transit System with the Most UPT in 2022")
 
 ```
-2. Which transit system (agency and mode) had the highest farebox recovery (Total Fares / Expenses)?
+
+2.  Which transit system (agency and mode) had the highest farebox recovery (Total Fares / Expenses)?
+
 ```{r}
 # Transit system with the highest farebox recovery
 highest_farebox_recovery <- USAGE_AND_FINANCIALS |>
@@ -511,7 +507,8 @@ highest_farebox_recovery |>
   gt() |> 
   tab_header(title = "Transit System with the Highest Farebox Recovery in 2022")
 ```
-3. Which transit system (agency and mode) has the lowest expenses per UPT?
+
+3.  Which transit system (agency and mode) has the lowest expenses per UPT?
 
 ```{r}
 # Transit system with the lowest expenses per UPT
@@ -527,7 +524,9 @@ lowest_expenses_per_upt |>
   tab_header(title = "Transit System with the Lowest Expenses per UPT in 2022")
 
 ```
-4. Which transit system (agency and mode) has the highest total fares per UPT?
+
+4.  Which transit system (agency and mode) has the highest total fares per UPT?
+
 ```{r}
 # Transit system with the highest total fares per UPT
 highest_fares_per_upt <- USAGE_AND_FINANCIALS |>
@@ -542,7 +541,9 @@ highest_fares_per_upt |>
   tab_header(title = "Transit System with the Highest Total Fares per UPT in 2022")
 
 ```
-5. Which transit system (agency and mode) has the lowest expenses per VRM?
+
+5.  Which transit system (agency and mode) has the lowest expenses per VRM?
+
 ```{r}
 # Transit system with the lowest expenses per VRM
 lowest_expenses_per_vrm <- USAGE_AND_FINANCIALS |>
@@ -557,7 +558,9 @@ lowest_expenses_per_vrm |>
   tab_header(title = "Transit System with the Lowest Expenses per VRM in 2022")
 
 ```
-6. Which transit system (agency and mode) has the highest total fares per VRM?
+
+6.  Which transit system (agency and mode) has the highest total fares per VRM?
+
 ```{r}
 # Transit system with the highest total fares per VRM
 highest_fares_per_vrm <- USAGE_AND_FINANCIALS |>
@@ -571,7 +574,6 @@ highest_fares_per_vrm |>
   gt() |> 
   tab_header(title = "Transit System with the Highest Total Fares per VRM in 2022")
 ```
-
 
 ## Conclusion
 
