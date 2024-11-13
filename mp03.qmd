@@ -666,22 +666,12 @@ animated_map <- ggplot(map_data_with_results) +
   ease_aes('linear')        # Smooth animation
 
 # Render the animation as before
-#animate(
- # animated_map,
-  #nframes = 100,               # Increased number of frames for smoother animation
-  #fps = 10,                    # Higher frames per second for a fluid animation
-  #width = 1600,                # Increased width for higher resolution
-  #height = 800,                # Increased height for higher resolution
-  #renderer = gifski_renderer("election_animation_high_res.gif")
-#)
+#animate(animated_map,nframes = 100,fps = 10,width = 800,height = 600, renderer = gifski_renderer("election_animation_high_res.gif"))
 
 knitr::include_graphics("election_animation_high_res.gif")
-
 ```
-![](election_animation.gif)
 
-
-###Comparing the Effects of ECV Allocation Rules
+## Comparing the Effects of ECV Allocation Rules
 
 Now, we are finishing the exploration of the data, we can compare the effects of different Electoral College Vote (ECV).Go through the historical voting data and assign each state’s ECVs according to various strategies:
 
