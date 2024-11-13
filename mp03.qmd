@@ -172,11 +172,9 @@ for (i in 0:10) {
 
 ```
 
-***Initial Exploration of Vote Count Data
+\*\*\*Initial Exploration of Vote Count Data
 
-Analyze Seat Gains and Losses in the U.S. House (1976-2022)
-This code calculates which states gained or lost the most seats in the House of Representatives between 1976 and 2022.
-
+Analyze Seat Gains and Losses in the U.S. House (1976-2022) This code calculates which states gained or lost the most seats in the House of Representatives between 1976 and 2022.
 
 ```{r}
 
@@ -230,21 +228,21 @@ list(plot_seat_gains, plot_seat_losses)
 
 ```
 
-As we can see in this graph, the states that gained the most seats are Texas, Florida, California, Arizona, and Georgia.  On the other hand, the states that lost the most seats are New York, Ohio, Pennsylvania, Illinois, Ohio, and Michigan. The following table explains the population growth between 1976 to 2022 shifts are the main reason for these changes. 
+As we can see in this graph, the states that gained the most seats are Texas, Florida, California, Arizona, and Georgia. On the other hand, the states that lost the most seats are New York, Ohio, Pennsylvania, Illinois, Ohio, and Michigan. The following table explains the population growth between 1976 to 2022 shifts are the main reason for these changes.
 
-| Location       | Growth Percentage |
-|----------------|-------------------|
-| **Arizona**    | 192.0%            |
-| **Florida**    | 161.9%            |
-| **Texas**      | 145.9%            |
-| **Georgia**    | 125.0%            |
-| **California** | 77.3%             |
-| **USA**        | 52.8%             |
-| **Illinois**   | 12.5%             |
-| **Pennsylvania** | 10.2%           |
-| **New York**   | 10.1%             |
-| **Ohio**       | 9.3%              |
-| **Michigan**   | 8.1%              |
+| Location         | Growth Percentage |
+|------------------|-------------------|
+| **Arizona**      | 192.0%            |
+| **Florida**      | 161.9%            |
+| **Texas**        | 145.9%            |
+| **Georgia**      | 125.0%            |
+| **California**   | 77.3%             |
+| **USA**          | 52.8%             |
+| **Illinois**     | 12.5%             |
+| **Pennsylvania** | 10.2%             |
+| **New York**     | 10.1%             |
+| **Ohio**         | 9.3%              |
+| **Michigan**     | 8.1%              |
 
 We see clearly that the Usa is in the middle of the list, and the states that lost the most seats are in the bottom of the list.
 
@@ -312,16 +310,13 @@ election_outcomes |>
 
 ```
 
-
 As we can see, fusion voting can be a deciding factor in elections. The table demonstrates that fusion voting increases the likelihood of being elected by enabling candidates to gather votes from multiple party lines. This consolidates support in a way that would not be possible without fusion, giving fusion candidates a strategic advantage.
 
-
-***Analyzing Presidential vs. Congressional Vote Patterns Across Parties
+\*\*\*Analyzing Presidential vs. Congressional Vote Patterns Across Parties
 
 This analysis explores whether presidential candidates tend to run ahead of or behind their congressional counterparts in the same state. Specifically, we’re investigating if Democratic and Republican presidential candidates receive more votes in a given state than all congressional candidates from their party in that same state.
 
 The following code will compare these vote counts, identifying instances where presidential candidates either outperformed ("ahead") or underperformed ("behind") their co-partisans. This will also help us understand if this trend varies over time, across states, or between parties, providing insights into the relative popularity of presidential candidates within each party.
-
 
 ```{r}
 
@@ -368,7 +363,7 @@ ggplot(avg_vote_diff, aes(x = year, y = avg_vote_difference, color = party_simpl
   theme(legend.position = "top")
 ```
 
-As we can see in the image, the average vote difference between presidential and congressional candidates has fluctuated over the years. On this, we can see a major fluctuation in the Republican party, what indicate that the presidential candidate has a major influence on votes than the congressional candidates. For Democrats, the difference is not that big, but still, the presidential candidate has a major influence on votes than the congressional candidates. 
+As we can see in the image, the average vote difference between presidential and congressional candidates has fluctuated over the years. On this, we can see a major fluctuation in the Republican party, what indicate that the presidential candidate has a major influence on votes than the congressional candidates. For Democrats, the difference is not that big, but still, the presidential candidate has a major influence on votes than the congressional candidates.
 
 ```{r}
 
@@ -396,9 +391,10 @@ party_summary_stats |>
     Difference = "Difference (Ahead - Behind)"
   )
 ```
+
 Finally, we can observe the difference between the number of states where the presidential candidate ran ahead or behind their congressional counterparts. The table shows that both Democratic and Republican presidential candidates have run ahead more than behind, however, Republicans have a higher difference between the two categories. This indicates that Republican presidential candidates tend to outperform their congressional counterparts more frequently than Democratic candidates.
 
-***Importing and Plotting Shapefile Data
+\*\*\*Importing and Plotting Shapefile Data
 
 The shapefiles we downloaded are provided in zip archives containing several files, but we only need the .shp file from each archive. In this section, we’ll walk through extracting the .shp file, loading it into R, and creating a plot from the data. The main tool we’ll use is the sf package, specifically the read_sf() function, which allows us to read shapefiles directly into R. Below, I’ll demonstrate how this process works.
 
@@ -425,7 +421,6 @@ nyc_sf
 
 With the following code, we can plot the shapefile data to visualize the boundaries of New York City boroughs.
 
-
 ```{r}
 read_shp_from_zip <- function(zip_file) {
   files_in_zip <- unzip(zip_file, list = TRUE)
@@ -449,6 +444,7 @@ read_shp_from_zip <- function(zip_file) {
 ```
 
 Now we would plot the shapefile data to visualize the boundaries of New York City boroughs.
+
 ```{r}
 
 ggplot(nyc_sf, 
@@ -456,6 +452,7 @@ ggplot(nyc_sf,
     geom_sf()
 
 ```
+
 Also we can plot the shapefile data with a fill color to visualize the boundaries of New York City boroughs.
 
 ```{r}
@@ -465,73 +462,129 @@ ggplot(nyc_sf,
     geom_sf()
 ```
 
-*** Electoral College Results in 2000
+\*\*\* Electoral College Results in 2000
 
-In this section, we will create a choropleth map to visualize the results of the 2000 U.S. Presidential Election. The map will display the winning party in each state, highlighting the electoral college winner between George W. Bush and Al Gore. 
+In this section, we will create a choropleth map to visualize the results of the 2000 U.S. Presidential Election. The map will display the winning party in each state, highlighting the electoral college winner between George W. Bush and Al Gore.
 
 ```{r}
-# Step 1: Filter the presidential data for the 2000 election results
-cat("Step 1: Filtering the data for the 2000 presidential election.\n")
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(maps)
+
+# Step 1: Prepare Election Data
+cat("Step 1: Preparing Election Data\n")
 election_2000 <- DATA_PRESIDENT |>
   filter(year == 2000, office == "US PRESIDENT") |>
   group_by(state) |>
   slice_max(order_by = candidatevotes, n = 1) |>
   ungroup()
-cat("Filtered data:\n")
-print(head(election_2000))
 
-# Step 2: Create a variable for the winning party in each state
-cat("Step 2: Adding 'party_winner' column based on 'party_simplified'.\n")
+cat("Columns in election_2000 after filtering for 2000 election:\n")
+print(colnames(election_2000))
+
+# Step 2: Assign Winning Party
+cat("Step 2: Assigning Winning Party\n")
 election_2000 <- election_2000 |>
   mutate(
     party_winner = ifelse(party_simplified == "REPUBLICAN", "Republican", "Democrat"),
-    state = tolower(state)  # Standardize state names to lowercase
+    state = tolower(state)
   )
-cat("Data with 'party_winner' column:\n")
 print(head(election_2000))
 
-# Step 3: Load US state map data from the maps package
-cat("Step 3: Loading US state map data.\n")
-us_states <- map_data("state")
-cat("Map data:\n")
-print(head(us_states))
+# Step 3: Define Electoral College Votes (EC)
+cat("Step 3: Defining Electoral College Votes\n")
+ec_votes <- data.frame(
+  state_po = c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+               "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+               "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA",
+               "WV", "WI", "WY"),
+  EC = c(9, 3, 8, 6, 54, 8, 8, 3, 3, 25, 13, 4, 4, 22, 12, 7, 6, 8, 9, 4, 10, 12, 18, 10, 7, 11, 3, 5, 4, 4, 15, 5,
+         33, 14, 3, 21, 8, 7, 23, 4, 8, 3, 11, 32, 5, 3, 13, 11, 5, 11, 3)
+)
 
-# Step 4: Ensure state names in the election data match with map data
-# Strip whitespace and convert state names to lowercase
-cat("Step 4: Standardizing state names in election data.\n")
+# Step 4: Merge EC into election data
+cat("Step 4: Merging Electoral College Votes into Election Data\n")
 election_2000 <- election_2000 |>
-  mutate(state = tolower(trimws(state)))
-cat("Standardized election data:\n")
-print(head(election_2000))
+  left_join(ec_votes, by = "state_po")
 
-# Step 5: Check for any unmatched states between map data and election data
-cat("Step 5: Checking for unmatched states.\n")
-unmatched_states <- us_states |>
-  anti_join(election_2000, by = c("region" = "state"))
-if (nrow(unmatched_states) > 0) {
-  cat("Unmatched States (if any):\n")
-  print(unmatched_states$region)
-} else {
-  cat("All states matched successfully.\n")
-}
+cat("Checking for missing values in EC column:\n")
+print(sum(is.na(election_2000$EC)))
 
-# Step 6: Merge the election results with the map data
-cat("Step 6: Merging map data with election results.\n")
-map_data_with_results <- us_states |>
+# Step 5: Prepare Map Data
+cat("Step 5: Preparing Map Data\n")
+us_map <- map_data("state") |>
+  mutate(region = tolower(region))
+
+# Step 6: Merge election data with map data
+cat("Step 6: Merging Election Data with Map Data\n")
+map_data_with_results <- us_map |>
   left_join(election_2000, by = c("region" = "state"))
-cat("Merged data preview:\n")
-print(head(map_data_with_results))
+print(setdiff(us_map$region, election_2000$state))
 
-# Step 7: Plot the map with colors for each party
-cat("Step 7: Plotting the map.\n")
+# Step 7: Calculate State Centers for Labels
+cat("Step 7: Calculating State Centers for Labels\n")
+state_centers <- map_data_with_results |>
+  group_by(region) |>
+  summarize(
+    long_center = mean(range(long, na.rm = TRUE)),
+    lat_center = mean(range(lat, na.rm = TRUE)),
+    state_po = first(state_po),
+    EC = first(EC)
+  ) |>
+  ungroup()
+print(head(state_centers))
+
+# Step 8: Define Offset Labels for Northeastern States
+northeast_labels <- data.frame(
+  state_po = c("NH", "VT", "MA", "RI", "CT", "NJ", "DE", "MD", "DC"),
+  long_offset = c(5, 4, 7, 6, 5, 6, 5, 6, 4),
+  lat_offset = c(2, 1, -1, 0, -2, -1, -1, -1, -2)
+)
+
+# Join offset labels with state centers to add adjusted coordinates
+state_centers <- state_centers |>
+  left_join(northeast_labels, by = "state_po") |>
+  mutate(
+    long_center_adjusted = ifelse(!is.na(long_offset), long_center + long_offset, long_center),
+    lat_center_adjusted = ifelse(!is.na(lat_offset), lat_center + lat_offset, lat_center)
+  )
+
+# Prepare connector line data for northeastern states
+northeast_connectors <- state_centers |>
+  filter(!is.na(long_offset) & !is.na(lat_offset))
+
+# Step 9: Plot the Map with Insets and Connectors
+cat("Step 9: Plotting the Map\n")
 ggplot(map_data_with_results) +
-  geom_polygon(aes(x = long, y = lat, group = group, fill = party_winner), color = "white", lwd = 0.2) +
+  # Mainland US
+  geom_polygon(aes(x = long, y = lat, group = group, fill = party_winner), color = "white") +
+  # Alaska inset
+  geom_polygon(data = subset(map_data_with_results, region == "alaska"),
+               aes(x = long - 35, y = lat + 10, group = group, fill = party_winner), color = "white") +
+  # Hawaii inset
+  geom_polygon(data = subset(map_data_with_results, region == "hawaii"),
+               aes(x = long + 50, y = lat - 5, group = group, fill = party_winner), color = "white") +
+  # Party color scale
   scale_fill_manual(
     values = c("Democrat" = "blue", "Republican" = "red"),
     name = "2000 Election Winner",
     labels = c("Democrat" = "Gore", "Republican" = "Bush"),
-    na.value = "grey"  # Grey color for any unmatched/missing data
+    na.value = "grey"
   ) +
+  # Labels for each state with offset adjustments for northeastern states
+  geom_text(
+    data = state_centers,
+    aes(x = long_center_adjusted, y = lat_center_adjusted, label = paste(state_po, EC)),
+    color = "black",
+    size = 3,
+    fontface = "bold"
+  ) +
+  # Connector lines for northeastern states
+  geom_segment(data = northeast_connectors, 
+               aes(x = long_center, y = lat_center, xend = long_center_adjusted, yend = lat_center_adjusted), 
+               color = "black", linetype = "solid") +
+  # Map labels and theme
   labs(
     title = "2000 Presidential Election Results by State",
     subtitle = "Bush vs. Gore",
@@ -543,7 +596,248 @@ ggplot(map_data_with_results) +
     plot.title = element_text(hjust = 0.5, size = 16),
     plot.subtitle = element_text(hjust = 0.5, size = 12)
   )
-cat("Map plotted successfully.\n")
+
+cat("Map plot complete with Alaska, Hawaii insets and connectors for northeastern states.\n")
 
 ```
 
+Now we can see a clear picture of how the 2000 U.S. Presidential Election played out across the country. The map shows the winning party in each state, highlighting the electoral college winner between George W. Bush and Al Gore. This visualization provides a snapshot of the election results and the distribution of electoral votes across the United States.
+
+*Advance Chloropleth Visualization of the 2000 U.S. Presidential Election*
+
+
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(maps)
+
+# Step 1: Prepare Election Data (for multiple years)
+cat("Step 1: Preparing Election Data\n")
+
+# Filter the presidential data for relevant election years and select winners by state and year
+election_data <- DATA_PRESIDENT |>
+  filter(office == "US PRESIDENT") |>
+  group_by(year, state) |>
+  slice_max(order_by = candidatevotes, n = 1) |>
+  ungroup()
+
+# Display the columns in election_data after filtering
+cat("Columns in election_data after filtering for multiple elections:\n")
+print(colnames(election_data))
+
+# Step 2: Create a variable for the winning party in each state and year
+cat("Step 2: Assigning Winning Party\n")
+election_data <- election_data |>
+  mutate(
+    party_winner = ifelse(party_simplified == "REPUBLICAN", "Republican", "Democrat"),
+    state = tolower(state)  # Ensure compatibility by using lowercase state names
+  )
+
+# Display a sample of election_data
+cat("Sample of election_data with winning party column:\n")
+print(head(election_data))
+
+# Step 3: Define Electoral College Votes (EC) for each state
+cat("Step 3: Defining Electoral College Votes\n")
+ec_votes <- data.frame(
+  state_po = c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+               "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+               "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA",
+               "WV", "WI", "WY"),
+  EC = c(9, 3, 8, 6, 54, 8, 8, 3, 3, 25, 13, 4, 4, 22, 12, 7, 6, 8, 9, 4, 10, 12, 18, 10, 7, 11, 3, 5, 4, 4, 15, 5,
+         33, 14, 3, 21, 8, 7, 23, 4, 8, 3, 11, 32, 5, 3, 13, 11, 5, 11, 3)
+)
+
+# Step 4: Merge Electoral College votes into the election data
+cat("Step 4: Merging Electoral College Votes into Election Data\n")
+election_data <- election_data |>
+  left_join(ec_votes, by = "state_po")
+
+# Check for any missing values in EC column
+cat("Checking for any missing values in EC column after merge:\n")
+print(sum(is.na(election_data$EC)))
+
+# Step 5: Prepare Map Data
+cat("Step 5: Preparing Map Data\n")
+# Load map data and convert state names to lowercase for matching
+us_map <- map_data("state") |>
+  mutate(region = tolower(region))
+
+# Step 6: Merge election data with map data
+cat("Step 6: Merging Election Data with Map Data\n")
+map_data_with_results <- us_map |>
+  left_join(election_data, by = c("region" = "state"))
+
+# Check for any unmatched regions or missing data
+cat("Unmatched regions after merge (if any):\n")
+print(setdiff(us_map$region, election_data$state))
+
+# Step 7: Calculate State Centers for Labels
+cat("Step 7: Calculating State Centers for Labels\n")
+state_centers <- map_data_with_results |>
+  group_by(region, year) |>
+  summarize(
+    long_center = mean(range(long, na.rm = TRUE)),
+    lat_center = mean(range(lat, na.rm = TRUE)),
+    state_po = first(state_po),
+    EC = first(EC)
+  ) |>
+  ungroup()
+
+# Step 8: Define Offset Labels for Northeastern States
+northeast_labels <- data.frame(
+  state_po = c("NH", "VT", "MA", "RI", "CT", "NJ", "DE", "MD", "DC"),
+  long_offset = c(5, 4, 7, 6, 5, 6, 5, 6, 4),  # Adjust offsets for each state
+  lat_offset = c(2, 1, -1, 0, -2, -1, -1, -1, -2)
+)
+
+# Merge offset labels with state centers
+state_centers <- state_centers |>
+  left_join(northeast_labels, by = "state_po") |>
+  mutate(
+    long_center_adjusted = ifelse(!is.na(long_offset), long_center + long_offset, long_center),
+    lat_center_adjusted = ifelse(!is.na(lat_offset), lat_center + lat_offset, lat_center)
+  )
+
+# Step 9: Plot the Faceted Map
+cat("Step 9: Plotting the Faceted Map\n")
+ggplot(map_data_with_results) +
+  geom_polygon(aes(x = long, y = lat, group = group, fill = party_winner), color = "white") +
+  scale_fill_manual(
+    values = c("Democrat" = "blue", "Republican" = "red"),
+    name = "Election Winner",
+    labels = c("Democrat" = "Gore", "Republican" = "Bush"),
+    na.value = "grey"
+  ) +
+  geom_text(
+    data = state_centers,
+    aes(x = long_center_adjusted, y = lat_center_adjusted, label = paste(state_po, EC)),
+    color = "black",
+    size = 3,
+    fontface = "bold"
+  ) +
+  facet_wrap(~ year, ncol = 1) +  # Facet by year in a single column
+  labs(
+    title = "Presidential Election Results by State Over Time",
+    subtitle = "Each facet represents a different election year",
+    caption = "Data Source: MIT Election Data Science Lab"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5, size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 12)
+  )
+
+cat("Faceted map plot complete.\n")
+
+
+```
+
+
+**Comparing the Effects of ECV Allocation Rules
+
+Now, we are finishing the exploration of the data, we can compare the effects of different Electoral College Vote (ECV).Go through the historical voting data and assign each state’s ECVs according to various strategies:
+
+State-Wide Winner-Take-All
+District-Wide Winner-Take-All + State-Wide “At Large” Votes
+State-Wide Proportional
+National Proportional
+
+```{r}
+
+# Load necessary libraries
+library(dplyr)
+
+# Define the functions for each allocation rule
+
+# State-Wide Winner-Take-All
+state_winner_take_all <- function(data, ecv_data) {
+  data |>
+    group_by(state) |>
+    slice_max(order_by = candidatevotes, n = 1) |>
+    left_join(ecv_data, by = "state_po") |>
+    group_by(candidate) |>
+    summarise(ECV = sum(ECV, na.rm = TRUE)) |>
+    ungroup()
+}
+
+# District-Wide Winner-Take-All + State-Wide At-Large Votes
+district_winner_take_all <- function(pres_data, house_data, ecv_data) {
+  house_winners <- house_data |>
+    filter(office == "US HOUSE") |>
+    group_by(state, district) |>
+    slice_max(order_by = candidatevotes, n = 1) |>
+    mutate(candidate = ifelse(party == "REPUBLICAN", "Republican", "Democrat"))
+
+  state_winners <- pres_data |>
+    group_by(state) |>
+    slice_max(order_by = candidatevotes, n = 1) |>
+    select(state, candidate)
+
+  combined_winners <- bind_rows(house_winners, state_winners) |>
+    left_join(ecv_data, by = "state_po") |>
+    group_by(candidate) |>
+    summarise(ECV = sum(ECV, na.rm = TRUE)) |>
+    ungroup()
+  
+  combined_winners
+}
+
+# State-Wide Proportional Allocation
+state_proportional_allocation <- function(data, ecv_data) {
+  data |>
+    left_join(ecv_data, by = "state_po") |>
+    group_by(state, candidate) |>
+    mutate(ecv_share = (candidatevotes / sum(candidatevotes)) * ECV) |>
+    group_by(candidate) |>
+    summarise(ECV = sum(ecv_share, na.rm = TRUE)) |>
+    ungroup()
+}
+
+# National Proportional Allocation
+national_proportional_allocation <- function(data, ecv_data) {
+  total_votes <- data |>
+    summarise(total_votes = sum(candidatevotes, na.rm = TRUE))
+  
+  data |>
+    mutate(national_share = candidatevotes / total_votes$total_votes) |>
+    left_join(ecv_data, by = "state_po") |>
+    group_by(candidate) |>
+    summarise(ECV = sum(national_share * ECV, na.rm = TRUE)) |>
+    ungroup()
+}
+
+# Apply each method for each year and compare outcomes
+
+# Define years of interest
+years <- c(2000, 2004, 2008, 2012, 2016, 2020)
+ecv_data <- data.frame( # Example ECV data; fill in with actual data
+  state_po = c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA"),
+  ECV = c(9, 3, 11, 6, 55, 9, 7, 3, 29, 16) 
+)
+
+# Calculate ECV allocation results by year and method
+results <- lapply(years, function(year) {
+  pres_data <- DATA_PRESIDENT |>
+    filter(year == year, office == "US PRESIDENT")
+  house_data <- DATA_HOUSE |>
+    filter(year == year)
+
+  list(
+    year = year,
+    state_winner_take_all = state_winner_take_all(pres_data, ecv_data),
+    district_winner_take_all = district_winner_take_all(pres_data, house_data, ecv_data),
+    state_proportional_allocation = state_proportional_allocation(pres_data, ecv_data),
+    national_proportional_allocation = national_proportional_allocation(pres_data, ecv_data)
+  )
+})
+
+# Summarize differences
+cat("Comparison of ECV Allocations Across Years:\n")
+print(results)
+
+
+```
