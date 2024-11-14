@@ -1,9 +1,10 @@
 ---
 title: "# Mini-Project #03: Do Proportional Electoral College Allocations Yield a More Representative Presidency?"
 author: "Juan Camilo Martinez Benavides"
-output:
-  html_document:
-    code_folding: hide
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
 ---
 
 
@@ -37,6 +38,8 @@ We start by loading the necessary `R` packages for data manipulation and visuali
 #| echo: true
 #| message: false
 #| warning: false
+#| code-fold: true
+#| code-summary: "Show the code"
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -192,7 +195,7 @@ for (i in 0:10) {
 }
 ```
 
-###Initial Exploration of Vote Count Data
+### Initial Exploration of Vote Count Data
 
 Analyze Seat Gains and Losses in the U.S. House (1976-2022) This code calculates which states gained or lost the most seats in the House of Representatives between 1976 and 2022.
 
@@ -315,7 +318,7 @@ datatable(
 
 As we can see, fusion voting can be a deciding factor in elections. The table demonstrates that fusion voting increases the likelihood of being elected by enabling candidates to gather votes from multiple party lines. This consolidates support in a way that would not be possible without fusion, giving fusion candidates a strategic advantage.
 
-###Analyzing Presidential vs. Congressional Vote Patterns Across Parties
+### Analyzing Presidential vs. Congressional Vote Patterns Across Parties
 
 This analysis explores whether presidential candidates tend to run ahead of or behind their congressional counterparts in the same state. Specifically, we’re investigating if Democratic and Republican presidential candidates receive more votes in a given state than all congressional candidates from their party in that same state.
 
@@ -488,27 +491,20 @@ In this section, we will create a choropleth map to visualize the results of the
 #| warning: false
 
 # Step 1: Prepare Election Data
-cat("Step 1: Preparing Election Data\n")
 election_2000 <- DATA_PRESIDENT |>
   filter(year == 2000, office == "US PRESIDENT") |>
   group_by(state) |>
   slice_max(order_by = candidatevotes, n = 1) |>
   ungroup()
 
-cat("Columns in election_2000 after filtering for 2000 election:\n")
-print(colnames(election_2000))
-
 # Step 2: Assign Winning Party
-cat("Step 2: Assigning Winning Party\n")
 election_2000 <- election_2000 |>
   mutate(
     party_winner = ifelse(party_simplified == "REPUBLICAN", "Republican", "Democrat"),
     state = tolower(state)
   )
-print(head(election_2000))
 
 # Step 3: Define Electoral College Votes (EC)
-cat("Step 3: Defining Electoral College Votes\n")
 ec_votes <- data.frame(
   state_po = c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
                "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
@@ -519,26 +515,19 @@ ec_votes <- data.frame(
 )
 
 # Step 4: Merge EC into election data
-cat("Step 4: Merging Electoral College Votes into Election Data\n")
 election_2000 <- election_2000 |>
   left_join(ec_votes, by = "state_po")
 
-cat("Checking for missing values in EC column:\n")
-print(sum(is.na(election_2000$EC)))
 
 # Step 5: Prepare Map Data
-cat("Step 5: Preparing Map Data\n")
 us_map <- map_data("state") |>
   mutate(region = tolower(region))
 
 # Step 6: Merge election data with map data
-cat("Step 6: Merging Election Data with Map Data\n")
 map_data_with_results <- us_map |>
   left_join(election_2000, by = c("region" = "state"))
-print(setdiff(us_map$region, election_2000$state))
 
 # Step 7: Calculate State Centers for Labels
-cat("Step 7: Calculating State Centers for Labels\n")
 state_centers <- map_data_with_results |>
   group_by(region) |>
   summarize(
@@ -548,7 +537,6 @@ state_centers <- map_data_with_results |>
     EC = first(EC)
   ) |>
   ungroup()
-print(head(state_centers))
 
 # Step 8: Define Offset Labels for Northeastern States
 northeast_labels <- data.frame(
@@ -570,7 +558,6 @@ northeast_connectors <- state_centers |>
   filter(!is.na(long_offset) & !is.na(lat_offset))
 
 # Step 9: Plot the Map with Insets and Connectors
-cat("Step 9: Plotting the Map\n")
 ggplot(map_data_with_results) +
   # Mainland US
   geom_polygon(aes(x = long, y = lat, group = group, fill = party_winner), color = "white") +
@@ -612,17 +599,18 @@ ggplot(map_data_with_results) +
     plot.subtitle = element_text(hjust = 0.5, size = 12)
   )
 
-cat("Map plot complete with Alaska, Hawaii insets and connectors for northeastern states.\n")
-
 ```
 
 Now we can see a clear picture of how the 2000 U.S. Presidential Election played out across the country. The map shows the winning party in each state, highlighting the electoral college winner between George W. Bush and Al Gore. This visualization provides a snapshot of the election results and the distribution of electoral votes across the United States.
 
-*Advance Chloropleth Visualization of the 2000 U.S. Presidential Election*
+### Animated Map of U.S. Presidential Election Results (1976-2020)
 
 After this we want to visualize the results of all the U.S. Presidential Elections from 1976 to 2020. The following code will create a faceted map showing the winning party in each state for each election year, along with the corresponding electoral college votes.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 
 # Step 1: Prepare Election Data (for multiple years)
 election_data <- DATA_PRESIDENT |>
@@ -1013,9 +1001,3 @@ Result: Similar to State-Wide Proportional, with Democrats winning 66.7% of elec
 State-Wide Proportional is arguably the fairest, as it represents the actual vote distribution within each state. However, it significantly shifts outcomes, favoring Democrats due to higher urban population density. For instance, in a year like 2000, where Republicans narrowly won in the actual ECV count, a proportional method could have swung the outcome.
 
 Overall, State-Wide Proportional most accurately reflects voter preferences but tilts outcomes toward the party with broad, urban support.
-
-
-
-
-
-as we can see, 
