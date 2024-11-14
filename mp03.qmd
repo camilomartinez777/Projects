@@ -923,98 +923,6 @@ ggplot(national_adjusted, aes(x = year, y = proportional_ecv, color = party_simp
 ```
 Now we would compared all this methods to see the differences between them.
 
-
-```{r}
-# Total number of elections
-total_elections <- 12
-
-# Calculate Republican win percentages for each method
-
-# State-Wide Winner-Take-All
-statewide_republican_wins <- statewide_winners_ecv |>
-  group_by(year) |>
-  summarize(winning_party = party_simplified[which.max(ecv_total)]) |>
-  ungroup() |>
-  count(winning_party) |>
-  filter(winning_party == "REPUBLICAN") |>
-  pull(n)
-statewide_republican_percentage <- (statewide_republican_wins / total_elections) * 100
-statewide_democratic_percentage <- 100 - statewide_republican_percentage
-
-# District-Wide Winner-Take-All + At-Large
-district_republican_wins <- ecv_allocation |>
-  group_by(year) |>
-  summarize(winning_party = party_simplified[which.max(total_ecv)]) |>
-  ungroup() |>
-  count(winning_party) |>
-  filter(winning_party == "REPUBLICAN") |>
-  pull(n)
-district_republican_percentage <- (district_republican_wins / total_elections) * 100
-district_democratic_percentage <- 100 - district_republican_percentage
-
-# State-Wide Proportional
-state_proportional_republican_wins <- ecv_state_proportion |>
-  group_by(year) |>
-  summarize(winning_party = party_simplified[which.max(total_ecv)]) |>
-  ungroup() |>
-  count(winning_party) |>
-  filter(winning_party == "REPUBLICAN") |>
-  pull(n)
-state_proportional_republican_percentage <- (state_proportional_republican_wins / total_elections) * 100
-state_proportional_democratic_percentage <- 100 - state_proportional_republican_percentage
-
-# National Proportional
-national_proportional_republican_wins <- national_adjusted |>
-  group_by(year) |>
-  summarize(winning_party = party_simplified[which.max(proportional_ecv)]) |>
-  ungroup() |>
-  count(winning_party) |>
-  filter(winning_party == "REPUBLICAN") |>
-  pull(n)
-national_proportional_republican_percentage <- (national_proportional_republican_wins / total_elections) * 100
-national_proportional_democratic_percentage <- 100 - national_proportional_republican_percentage
-
-# Create a data frame for pie chart data
-pie_data <- data.frame(
-  method = c("State-Wide Winner-Take-All", "District-Wide + At-Large", 
-             "State-Wide Proportional", "National Proportional"),
-  party = rep(c("REPUBLICAN", "DEMOCRAT"), each = 4),
-  percentage = c(
-    statewide_republican_percentage, statewide_democratic_percentage,
-    district_republican_percentage, district_democratic_percentage,
-    state_proportional_republican_percentage, state_proportional_democratic_percentage,
-    national_proportional_republican_percentage, national_proportional_democratic_percentage
-  )
-)
-
-ggplot(pie_data, aes(x = "", y = percentage, fill = party)) +
-  geom_bar(width = 1, stat = "identity") +
-  coord_polar("y") +
-  facet_wrap(~ method, ncol = 2) +  # Arrange facets in a 2x2 grid
-  labs(
-    title = "Comparison of Party Wins by ECV Allocation Method",
-    fill = "Party"
-  ) +
-  scale_fill_manual(values = c("DEMOCRAT" = "blue", "REPUBLICAN" = "red")) +
-  geom_text(aes(label = paste0(round(percentage, 1), "%")), 
-            position = position_stack(vjust = 0.5), size = 3) +  # Add percentages to each segment
-  theme_minimal() +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.text = element_blank(),
-    panel.grid = element_blank(),
-    plot.title = element_text(size = 14, face = "bold"),
-    strip.text = element_text(size = 10, face = "bold"),  # Smaller facet labels for better fit
-    legend.position = "bottom",  # Move legend to bottom for better layout
-    legend.text = element_text(size = 8)  # Smaller legend text
-  )
-
-```
-
-
-
-
 ```{r}
 # Total number of elections
 total_elections <- 12
@@ -1086,12 +994,15 @@ gt(win_percentage_table)
 State-Wide Winner-Take-All:
 This widely used method awards all ECVs to the state-wide popular vote winner, often ignoring narrower vote margins.
 Result: Produced a balanced outcome, with each party winning 50% of elections (1976–2020), but often distorts national popular vote representation.
+
 District-Wide Winner-Take-All + At-Large:
 ECVs are awarded by district, with two at-large votes for the state winner.
 Result: Also produced a 50/50 split, providing a slightly more detailed reflection of local preferences, but still favoring swing districts.
+
 State-Wide Proportional:
 ECVs are split based on each candidate’s vote share within a state, offering a fairer reflection of popular support.
 Result: Democrats won 66.7% of elections, indicating a tilt toward populous urban centers.
+
 National Proportional:
 Allocates ECVs based on the national popular vote percentage.
 Result: Similar to State-Wide Proportional, with Democrats winning 66.7% of elections, showing a national popular vote bias.
