@@ -1,0 +1,836 @@
+---
+title: " Mini-Project #04: Monte Carlo-Informed Selection of CUNY Retirement Plans"
+author: "Juan Camilo Martinez Benavides"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+---
+
+
+
+## Introduction
+
+Selecting a retirement plan is one of the most critical financial decisions for new CUNY faculty, as it has permanent implications for their long-term financial security. Once chosen, the plan cannot be changed, making it essential to consider the potential risks and rewards. This project evaluates the Teachers Retirement System (TRS) and the Optional Retirement Plan (ORP) using historical economic data and Monte Carlo simulations. By modeling contributions, investment returns, and inflation-adjusted benefits, we aim to provide a personalized, data-driven recommendation tailored to individual financial goals and risk tolerance.
+
+
+## Objectives
+
+The primary goal of this project is to equip new CUNY faculty with an evidence-based recommendation for selecting the optimal retirement plan (TRS or ORP). This involves analyzing historical economic and financial data to assess how each plan performs under different economic conditions. We will utilize the following datasets:
+
+* Rate of Inflation:
+Inflation erodes the purchasing power of retirement benefits. For TRS, it determines the annual adjustment in benefits, while for ORP, it impacts the real value of savings and withdrawals.
+* Rate of Wage Growth:
+Wage growth directly influences contributions to both plans. For TRS, it affects the final average salary (FAS), which determines retirement payouts. For ORP, higher wages lead to larger investment contributions.
+* US Equity Market Returns:
+Equity market performance is crucial for ORP participants, as their investments grow with market returns. US equities represent a significant portion of most retirement portfolios.
+* International Equity Market Returns:
+Diversification through international equities reduces risk and enhances returns for ORP participants. It provides a broader perspective on investment performance beyond the US market.
+* Bond Returns:
+Bonds are a critical component of retirement portfolios, especially for ORP participants as they approach retirement. Bonds provide stability and reduce volatility in investment returns.
+* Short-Term Debt Returns:
+Short-term debt, such as Treasury yields, represents a safe investment option with lower risk. It is particularly relevant for retirees seeking liquidity and capital preservation.
+
+By combining insights from these datasets, we will simulate potential retirement outcomes for each plan, identify risks such as running out of funds, and quantify the financial benefits of each option. This comprehensive approach ensures that our recommendation aligns with the diverse financial priorities of faculty members.
+
+
+### Libraries
+The following are the libraries we would use throughtout the project. 
+```{r}
+#| echo: true
+#| message: false
+#| warning: false
+#| code-fold: true
+#| code-summary: "Show the code"
+library(httr2)    # For API requests
+library(dplyr)    # For data manipulation
+library(ggplot2)  # For visualization
+library(zoo)      # For handling time-series data and filling missing values
+
+
+```
+
+
+## Data Collection
+For this project, we will use data from two economic and financial data sources:
+
+1. **AlphaVantage**: A commercial stock market data provider.
+2. **FRED**: The Federal Reserve Economic Data repository maintained by the Federal Reserve Bank of St. Louis.
+
+FRED is free to access, but AlphaVantage is a commercial service requiring a subscription. For this mini-project, the free tier of AlphaVantage will suffice.
+
+### Links to Resources
+- [AlphaVantage](https://www.alphavantage.co)
+- [FRED (Federal Reserve Economic Data)](https://fred.stlouisfed.org)
+
+
+## DATA COLLECTION
+
+We would proceed to collect the data from the sources mentioned above. and we would do it on a monthly basis for the last 15 years.
+
+Tod do so, we would use their Apis:
+
+```{r}
+# Define the base URL for the FRED API
+fred_url <- "https://api.stlouisfed.org/fred/series/observations"
+
+# Define the base URL for the AlphaVantage API
+alphavantage_url <- "https://www.alphavantage.co/query"
+
+# Read FRED API key from a file
+fred_key <- readLines("fred_key.txt") # Ensure this file contains only your FRED API key
+
+# Read AlphaVantage API key from a file
+alphavantage_key <- readLines("alphavantage_key.txt") # Ensure this file contains only your AlphaVantage API key
+
+# Montly basis for the last 15 years
+Time_Montly =as.Date("2009-01-01")
+```
+
+1. Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
+```{r}
+# Fetch Inflation Data from FRED (CPI for NYC Metro Area)
+inflation_req <- request(fred_url) |>
+  req_url_query(
+    series_id = "CUUR0400SA0",  # CPI for All Urban Consumers: NYC Metro Area
+    api_key = fred_key,
+    file_type = "json"
+  )
+
+inflation_resp <- inflation_req |> req_perform()
+inflation_data <- resp_body_json(inflation_resp)$observations
+
+# Convert to DataFrame
+inflation_df <- data.frame(
+  date = as.Date(sapply(inflation_data, function(x) x$date)),
+  inflation_rate = as.numeric(sapply(inflation_data, function(x) x$value))
+)
+
+# Filter the data for the last 15 years
+inflation_df <- inflation_df |> filter(date >= Time_Montly)
+
+# Count the rows and check for missing data
+cat("Total Rows in Inflation Data: ", nrow(inflation_df), "\n")
+cat("Rows with Missing Inflation Data: ", sum(is.na(inflation_df$inflation_rate)), "\n")
+
+# Preview the data
+tail(inflation_df)
+```
+
+
+2. Fetching Rate of Wage Growth from FRED, We’ll use the AHETPI series to measure wage growth.
+
+```{r}
+# Fetch Wage Growth Data from FRED
+wage_growth_req <- request(fred_url) |>
+  req_url_query(
+    series_id = "AHETPI", # Average Hourly Earnings of Production and Nonsupervisory Employees
+    api_key = fred_key,
+    file_type = "json"
+  )
+
+wage_growth_resp <- wage_growth_req |> req_perform()
+wage_growth_data <- resp_body_json(wage_growth_resp)$observations
+
+# Convert to a DataFrame
+wage_growth_df <- data.frame(
+  date = as.Date(sapply(wage_growth_data, function(x) x$date)), # Parse date
+  wage_growth = as.numeric(sapply(wage_growth_data, function(x) x$value)) # Convert to numeric
+)
+
+# Filter data for the last 15–20 years
+wage_growth_df <- wage_growth_df |> filter(date >= Time_Montly)
+
+# Check the data
+total_rows <- nrow(wage_growth_df)
+missing_rows <- sum(is.na(wage_growth_df$wage_growth))
+
+# Output results
+cat("Total Rows in Wage Growth Data: ", total_rows, "\n")
+cat("Rows with Missing Wage Growth Data: ", missing_rows, "\n")
+
+# Preview the first few rows of the dataset
+tail(wage_growth_df)
+```
+
+3. Fetching US Equity Market Returns from AlphaVantage
+```{r}
+# Fetch US Equity Market Data from AlphaVantage
+us_equity_req <- request(alphavantage_url) |>
+  req_url_query(
+    `function` = "TIME_SERIES_MONTHLY_ADJUSTED",
+    symbol = "SPY", # S&P 500 ETF
+    apikey = alphavantage_key
+  )
+us_equity_resp <- us_equity_req |> req_perform()
+us_equity_data <- resp_body_json(us_equity_resp)$`Monthly Adjusted Time Series`
+
+# Convert to DataFrame
+us_equity_df <- data.frame(
+  date = as.Date(names(us_equity_data)), # Extract dates
+  us_equity_close = as.numeric(sapply(us_equity_data, function(x) x$`5. adjusted close`)) # Extract adjusted close prices
+)
+
+# Standardize dates to the first of each month
+us_equity_df$date <- as.Date(format(us_equity_df$date, "%Y-%m-01"))
+
+# Filter for the past 15 years
+us_equity_df <- us_equity_df |> filter(date >= Time_Montly)
+
+# Check Data Quality
+cat("Total Rows in US Equity Data: ", nrow(us_equity_df), "\n")
+cat("Rows with Missing US Equity Data: ", sum(is.na(us_equity_df$us_equity_close)), "\n")
+
+# Preview Data
+tail(us_equity_df)
+
+
+```
+
+
+4. Fetching International Equity Market Returns from AlphaVantage
+
+```{r}
+# Fetch International Equity Market Data from AlphaVantage
+intl_req <- request(alphavantage_url) |>
+  req_url_query(
+    `function` = "TIME_SERIES_MONTHLY_ADJUSTED",
+    symbol = "VEA", # Vanguard FTSE Developed Markets ETF
+    apikey = alphavantage_key
+  )
+
+intl_resp <- intl_req |> req_perform()
+intl_data <- resp_body_json(intl_resp)$`Monthly Adjusted Time Series`
+
+# Convert the fetched data into a data frame
+intl_equity_df <- data.frame(
+  date = as.Date(names(intl_data)),
+  intl_equity_close = as.numeric(sapply(intl_data, function(x) x$`5. adjusted close`))
+)
+
+# Standardize dates to the first of each month
+intl_equity_df$date <- as.Date(format(intl_equity_df$date, "%Y-%m-01"))
+
+# Filter for the past 15 years
+intl_equity_df <- intl_equity_df |> filter(date >= Time_Montly)
+
+# Print information about the dataset
+cat("Total Rows in International Equity Data: ", nrow(intl_equity_df), "\n")
+cat("Rows with Missing International Equity Data: ", sum(is.na(intl_equity_df$intl_equity_close)), "\n")
+
+head(intl_equity_df)
+
+```
+
+
+5. Fetching Bond Returns from AlphaVantage
+
+```{r}
+# Fetch Bond Yield Data (Daily)
+bond_req <- request(fred_url) |>
+  req_url_query(
+    series_id = "DGS10", # 10-Year Treasury Yield
+    api_key = fred_key,
+    file_type = "json"
+  )
+
+bond_resp <- bond_req |> req_perform()
+bond_data <- resp_body_json(bond_resp)$observations
+
+# Convert to DataFrame
+bond_df <- data.frame(
+  date = as.Date(sapply(bond_data, function(x) x$date)),
+  bond_yield = as.numeric(sapply(bond_data, function(x) x$value))
+)
+
+# Summary of Fetched Data
+cat("Total Rows in Bond Yield Data: ", nrow(bond_df), "\n")
+cat("Rows with Missing Bond Yield Data: ", sum(is.na(bond_df$bond_yield)), "\n")
+
+# Downsample to Monthly Averages
+bond_df <- bond_df |>
+  mutate(month = format(date, "%Y-%m")) |># Extract year-month for grouping
+  group_by(month) |>
+  summarize(
+    bond_yield = mean(bond_yield, na.rm = TRUE), # Average yield for the month
+    .groups = "drop"
+  ) |>
+  mutate(date = as.Date(paste0(month, "-01"))) |># Convert back to Date
+  select(date, bond_yield)
+
+# Filter for the last 15 years
+bond_df <- bond_df |> filter(date >= Time_Montly)
+
+# Summary after Downsampling
+cat("Total Rows in Bond Yield Data (Monthly): ", nrow(bond_df), "\n")
+cat("Rows with Missing Bond Yield Data: ", sum(is.na(bond_df$bond_yield)), "\n")
+
+# Preview the Data
+print(tail(bond_df))
+
+
+```
+
+
+6. Fetching Short-Term Debt Returns from AlphaVantage: for this dataset, we need to downsample the daily data to monthly averages to align with the other datasets.
+
+```{r}
+# Fetch Short-Term Debt Data (2-Year Treasury Yield) - Attempt Monthly Query
+short_term_req <- request(fred_url) |>
+  req_url_query(
+    series_id = "DGS2", # 2-Year Treasury Yield
+    frequency = "m", # Request monthly data directly
+    api_key = fred_key,
+    file_type = "json"
+  )
+
+short_term_resp <- short_term_req |> req_perform()
+short_term_data <- resp_body_json(short_term_resp)$observations
+
+# Convert JSON to DataFrame
+short_term_df <- data.frame(
+  date = as.Date(sapply(short_term_data, function(x) x$date), format = "%Y-%m-%d"),
+  short_term_yield = as.numeric(sapply(short_term_data, function(x) x$value))
+)
+
+# Filter for the Last 15 Years
+short_term_df <- short_term_df |> filter(date >= Time_Montly)
+
+# Check Total Rows and Missing Data
+cat("Total Rows in Short-Term Yield Data (Monthly): ", nrow(short_term_df), "\n")
+cat("Rows with Missing Short-Term Yield Data: ", sum(is.na(short_term_df$short_term_yield)), "\n")
+
+# Preview the Data
+tail(short_term_df)
+```
+
+
+## Data Preprocessing and Cleaning
+Now that we have collected the data, we can proceed to the next step, which is data preprocessing. We we gonna unify the data and deal with missing values by using bootstrapping.
+
+```{r}
+# Load necessary libraries for analysis and visualization
+library(dplyr)
+library(ggplot2)
+
+# Define a function to cap outliers
+cap_outlier <- function(x, lower_bound, upper_bound) {
+  x[x < lower_bound] <- lower_bound
+  x[x > upper_bound] <- upper_bound
+  return(x)
+}
+
+# Standardize dates to the first of each month for all datasets
+datasets <- list(inflation_df, wage_growth_df, us_equity_df, intl_equity_df, bond_df, short_term_df)
+datasets <- lapply(datasets, function(df) {
+  df$date <- as.Date(format(df$date, "%Y-%m-01"))
+  return(df)
+})
+
+# Unpack datasets back
+inflation_df <- datasets[[1]]
+wage_growth_df <- datasets[[2]]
+us_equity_df <- datasets[[3]]
+intl_equity_df <- datasets[[4]]
+bond_df <- datasets[[5]]
+short_term_df <- datasets[[6]]
+
+# Create master date sequence
+start_date <- as.Date("2009-01-01")
+end_date <- as.Date(format(Sys.Date(), "2024-10-01"))
+date_seq <- data.frame(date = seq(from = start_date, to = end_date, by = "month"))
+cat("Expected number of rows (months) over 15 years: ", nrow(date_seq), "\n")
+
+# Perform left joins for all datasets
+combined_data <- date_seq %>%
+  left_join(inflation_df, by = "date") %>%
+  left_join(wage_growth_df, by = "date") %>%
+  left_join(us_equity_df, by = "date") %>%
+  left_join(intl_equity_df, by = "date") %>%
+  left_join(bond_df, by = "date") %>%
+  left_join(short_term_df, by = "date")
+
+# Check for missing data
+cat("Total Rows in Combined Dataset: ", nrow(combined_data), "\n")
+missing_summary <- combined_data %>%
+  summarize(across(everything(), ~ sum(is.na(.))))
+cat("Missing Data Summary:\n")
+print(missing_summary)
+
+# Apply bootstrapping for missing values
+cat("Applying bootstrap for missing data...\n")
+
+combined_data <- combined_data %>%
+  mutate(
+    inflation_rate = replace(inflation_rate,
+                             is.na(inflation_rate),
+                             sample(na.omit(inflation_rate), size = sum(is.na(inflation_rate)), replace = TRUE)),
+    wage_growth = replace(wage_growth,
+                          is.na(wage_growth),
+                          sample(na.omit(wage_growth), size = sum(is.na(wage_growth)), replace = TRUE)),
+    us_equity_close = replace(us_equity_close,
+                              is.na(us_equity_close),
+                              sample(na.omit(us_equity_close), size = sum(is.na(us_equity_close)), replace = TRUE)),
+    intl_equity_close = replace(intl_equity_close,
+                                is.na(intl_equity_close),
+                                sample(na.omit(intl_equity_close), size = sum(is.na(intl_equity_close)), replace = TRUE)),
+    bond_yield = replace(bond_yield,
+                         is.na(bond_yield),
+                         sample(na.omit(bond_yield), size = sum(is.na(bond_yield)), replace = TRUE)),
+    short_term_yield = replace(short_term_yield,
+                               is.na(short_term_yield),
+                               sample(na.omit(short_term_yield), size = sum(is.na(short_term_yield)), replace = TRUE))
+  )
+
+# Handle outliers by capping them
+combined_data <- combined_data %>%
+  mutate(
+    inflation_rate = cap_outlier(inflation_rate, 
+                                 lower_bound = quantile(inflation_rate, 0.01, na.rm = TRUE), 
+                                 upper_bound = quantile(inflation_rate, 0.99, na.rm = TRUE)),
+    wage_growth = cap_outlier(wage_growth, 
+                              lower_bound = quantile(wage_growth, 0.01, na.rm = TRUE), 
+                              upper_bound = quantile(wage_growth, 0.99, na.rm = TRUE)),
+    us_equity_close = cap_outlier(us_equity_close, 
+                                  lower_bound = quantile(us_equity_close, 0.01, na.rm = TRUE), 
+                                  upper_bound = quantile(us_equity_close, 0.99, na.rm = TRUE)),
+    intl_equity_close = cap_outlier(intl_equity_close, 
+                                    lower_bound = quantile(intl_equity_close, 0.01, na.rm = TRUE), 
+                                    upper_bound = quantile(intl_equity_close, 0.99, na.rm = TRUE)),
+    bond_yield = cap_outlier(bond_yield, 
+                             lower_bound = quantile(bond_yield, 0.01, na.rm = TRUE), 
+                             upper_bound = quantile(bond_yield, 0.99, na.rm = TRUE)),
+    short_term_yield = cap_outlier(short_term_yield, 
+                                   lower_bound = quantile(short_term_yield, 0.01, na.rm = TRUE), 
+                                   upper_bound = quantile(short_term_yield, 0.99, na.rm = TRUE))
+  )
+
+# Validate the final dataset
+cat("After handling missing values and outliers:\n")
+missing_summary_after <- combined_data %>%
+  summarize(across(everything(), ~ sum(is.na(.))))
+print(missing_summary_after)
+
+# You can now proceed with additional analysis or visualization
+tail(combined_data)
+```
+```{r}
+
+tail(combined_data)
+```
+## Initial Analysis
+
+Now that we have a clean dataset, we can perform some initial analysis to understand the trends and relationships between the variables. 
+
+We will visualize the data using line plots and we going to display them in pairs to compare the trends between the variables. so it would be inflation rate and wage growth, US equity and International equity, and Bond Yield and Short-Term Yield.
+
+```{r}
+# Create plot for Inflation Rate and Wage Growth with corrected labels and separate y-axes
+p1 <- ggplot(combined_data, aes(x = date)) +
+  # Inflation Rate
+  geom_line(aes(y = inflation_rate), color = "blue") +
+  scale_y_continuous(
+    name = "Inflation Rate Value (NYC)",  # Corrected label for inflation rate
+    sec.axis = sec_axis(~ . * 0, name = " ")  # Create empty secondary axis for separation
+  ) +
+  # Wage Growth (scaled for visibility)
+  geom_line(aes(y = wage_growth * 10), color = "green") +
+  scale_y_continuous(
+    name = "Inflation Rate Value (NYC)",  # Corrected label for wage growth
+    sec.axis = sec_axis(~ . / 10, name = "Wage Growth (Hourly Earnings in $)")  # Corrected secondary label
+  ) +
+  labs(title = "Inflation Rate and Wage Growth Over Time", x = "Date") +
+  theme_minimal() +
+  theme(
+    axis.title.y.left = element_text(color = "blue", size = 12),
+    axis.title.y.right = element_text(color = "green", size = 12)
+  )
+
+# Create plot for US Equity and International Equity
+p2 <- ggplot(combined_data, aes(x = date)) +
+  # US Equity Return
+  geom_line(aes(y = us_equity_close), color = "red") +  
+  scale_y_continuous(
+    name = "US Equity Return (Adjusted Close)"  
+  ) +
+  # International Equity Return (scaled for visibility)
+  geom_line(aes(y = intl_equity_close * 10), color = "purple") +  
+  scale_y_continuous(
+    name = "US Equity Return (Adjusted Close)",
+    sec.axis = sec_axis(~ . / 10, name = "Intl Equity Return")  
+  ) +
+  labs(title = "US and International Equity Returns Over Time", x = "Date") +
+  theme_minimal() +
+  theme(
+    axis.title.y.left = element_text(color = "red", size = 12),
+    axis.title.y.right = element_text(color = "purple", size = 12)
+  )
+
+# Create plot for Bond Yield and Short-Term Yield 
+p3 <- ggplot(combined_data, aes(x = date)) +
+  # Bond Yield
+  geom_line(aes(y = bond_yield * 2), color = "orange") +  
+  scale_y_continuous(
+    name = "Bond Yield (%)", 
+    sec.axis = sec_axis(~ . / 2, name = "Bond Yield (%)")  
+  ) +
+  # Short-Term Yield
+  geom_line(aes(y = short_term_yield * 2), color = "brown") +  
+  scale_y_continuous(
+    name = "Short-Term Yield (%)", 
+    sec.axis = sec_axis(~ . / 2, name = "Short-Term Yield (%)")  
+  ) +
+  labs(title = "Bond Yield and Short-Term Yield Over Time", x = "Date") +
+  theme_minimal() +
+  theme(
+    axis.title.y.left = element_text(color = "orange", size = 12),
+    axis.title.y.right = element_text(color = "brown", size = 12)
+  )
+
+# Display all three plots
+p1
+p2
+p3
+
+```
+
+### Correlation matrix
+
+We will calculate the correlation matrix to understand the relationships between the variables. This will help us identify any significant correlations that can inform our analysis and decision-making process.
+
+
+```{r}
+# Load the necessary library
+library(ggcorrplot)
+
+# Select only numeric columns
+numeric_data <- combined_data %>%
+  select(where(is.numeric))
+
+# Compute the correlation matrix
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+
+# Visualize the correlation matrix using ggcorrplot
+ggcorrplot(cor_matrix, 
+           type = "lower",          # Only show the lower triangle
+           lab = TRUE,              # Show correlation coefficient labels
+           lab_size = 3,            # Adjust label size
+           method = "circle",       # Use circle shapes for correlation values
+           colors = c("red", "white", "blue"), # Color scale
+           title = "Correlation Matrix", # Plot title
+           ggtheme = theme_minimal(), # Minimalistic theme
+           tl.cex = 12,             # Title label size
+           tl.col = "black"         # Title text color
+)
+
+
+
+
+```
+
+# Key Findings on Economic Factors and Retirement Planning
+
+In this analysis, we examine the relationships between several key economic factors, including inflation, wage growth, stock market returns (both US and international), bond yields, and short-term debt yields. Understanding how these factors are correlated can provide valuable insights for making informed financial decisions, particularly for retirement planning.
+
+## Key Findings:
+
+### 1. Inflation Rate and Wage Growth:
+- **Correlation**: 0.98 (Very strong)
+- **Interpretation**: When inflation increases, wage growth tends to follow suit. This suggests that as the cost of living rises, your wages are likely to increase as well, which helps you keep up with inflation.
+
+### 2. Stock Market Returns:
+
+#### US and International Markets:
+- **Correlation**: 0.97 (Very strong)
+- **Interpretation**: US and international stock markets have a highly positive correlation, meaning they often move in the same direction. This makes diversification between US and international markets a good strategy for reducing risk while maintaining growth potential.
+
+#### US Equity Returns and Bond Yields:
+- **Correlation**: 0.68 (Moderate)
+- **Interpretation**: The moderate correlation suggests that when US stocks perform well, bond yields may not follow the same trend. Investors need to balance their portfolios between stocks and bonds, taking into account their risk tolerance and time horizon.
+
+### 3. Inflation and Other Variables:
+
+#### Inflation and US Stock Returns:
+- **Correlation**: 0.92 (Strong)
+- **Interpretation**: Inflation and US stock returns are highly correlated. As inflation rises, US stocks tend to perform well, making stocks a potential hedge against inflation.
+
+#### Inflation and International Stock Returns:
+- **Correlation**: 0.97 (Very strong)
+- **Interpretation**: Like US stocks, international stocks also tend to rise with inflation, making global diversification a viable strategy for mitigating inflation risk.
+
+#### Inflation and Bond Yields:
+- **Correlation**: 0.72 (Moderate)
+- **Interpretation**: Inflation and bond yields are moderately correlated. Rising inflation generally leads to higher bond yields, which can help protect fixed-income investments from losing purchasing power.
+
+### 4. Bond Yield and Short-Term Yield:
+- **Correlation**: 0.75 (Strong)
+- **Interpretation**: Bond yields and short-term yields tend to move in the same direction, which suggests that both types of bonds respond similarly to changes in interest rates.
+
+## Implications for Retirement Planning:
+
+- **Wage Growth and Inflation**: The close correlation between wage growth and inflation means that as prices rise, your income should likely increase, helping you maintain purchasing power in retirement.
+  
+- **Equity Market Performance**: The strong correlation between US and international equity returns allows for diversification between these markets without sacrificing performance.
+  
+- **Bonds and Short-Term Yields**: Understanding the relationship between bonds and short-term debt yields is crucial for managing fixed-income investments in a rising interest rate environment.
+
+
+## Historical Comparison of TRS and ORP
+
+### TRS vs. ORP: Retirement Comparison
+
+In this section, we compare the **Teachers Retirement System (TRS)** and the **Optional Retirement Plan (ORP)** for the first month of retirement, assuming:
+
+- **Career Timeline**: Employee joined CUNY in **January 2009** and retired in **November 2024**.
+- **Starting Salary**: $50,000 in **2009**, adjusted annually for historical wage growth (using actual wage growth data).
+- **Fixed Plan Parameters**: Contribution rates and retirement benefits remain constant during the employee’s career.
+
+### Plan Overviews
+
+#### TRS (Teachers Retirement System)
+- **Defined-Benefit Plan**:
+  - Retirement income is based on the **Final Average Salary (FAS)** and years of service.
+- **Retirement Benefit Formula**:
+  - \( \text{Benefit} = \text{FAS} \times \left(\frac{\text{Years of Service}}{2}\right) \), capped at **30 years of service**.
+- **Inflation Adjustment**:
+  - **Annual increase** of **50% of CPI**, capped between **1% and 3%** annually.
+
+#### ORP (Optional Retirement Plan)
+- **Defined-Contribution Plan**:
+  - Employee and employer contribute to an individual retirement account, invested in a **Fidelity Freedom Fund**.
+- **Contributions**:
+  - **Employee**: Salary-based contribution (e.g., 3% for salaries ≤$45,000; 3.5% for $45,001–$55,000).
+  - **Employer**: 8% for the first 7 years, then 10% for subsequent years.
+- **Investment Returns**:
+  - US equities: **7%**, International equities: **6%**, Bonds: **4%**.
+- **Retirement Strategy**: Withdraw **4%** of accumulated funds annually at retirement.
+
+---
+
+### Step-by-Step Analysis
+
+#### 1. **Starting Salary**
+- The employee’s starting salary is **$50,000** in **January 2009**.
+- The salary increases **annually** based on historical wage growth data.
+
+#### 2. **TRS Benefit Calculation**
+- **Final Average Salary (FAS)**:
+  - Calculated as the average of the last three years of salary, adjusted for wage growth.
+- **Years of Service**:
+  - The employee works for **15 years** (from 2009 to 2024), and their pension benefit is calculated based on **15 years of service**.
+- **Monthly Pension**:
+  - The pension benefit is calculated as \( \text{FAS} \times \left(\frac{15}{2}\right) \) (since the employee works 15 years).
+- **Inflation Adjustment**:
+  - The pension benefit will be **inflation-adjusted** annually based on the **CPI**. The adjustment will be between **1% and 3%** per year, applied each September after retirement.
+
+#### 3. **ORP Benefit Calculation**
+- **Monthly Contributions**:
+  - The employee and employer contributions are calculated based on the **salary brackets** (e.g., 3% for salaries ≤$45,000).
+  - Contributions are made monthly throughout the employee’s **15-year** career.
+- **Investment Growth**:
+  - The employee’s contributions grow using the average market returns over time:
+    - US equities: **7%**, International equities: **6%**, Bonds: **4%**.
+- **Retirement Withdrawal**:
+  - The employee can begin withdrawing funds from their ORP account upon retirement.
+  - A general rule of thumb is to withdraw **4%** annually from the accumulated balance at retirement.
+
+---
+
+The following code snippets will calculate the retirement benefits for both TRS and ORP based on the assumptions outlined above. We will compare the monthly benefits and accumulated funds for each plan to provide a comprehensive analysis of the retirement options.
+
+
+```{r}
+# Assuming the dataset 'combined_data' already exists
+# Calculate percentage growth for inflation_rate
+combined_data$inflation_rate_growth <- c(NA, diff(combined_data$inflation_rate) / head(combined_data$inflation_rate, -1))
+
+# Calculate percentage growth for wage_growth
+combined_data$wage_growth_growth <- c(NA, diff(combined_data$wage_growth) / head(combined_data$wage_growth, -1))
+
+# Calculate percentage growth for us_equity_close
+combined_data$us_equity_growth <- c(NA, diff(combined_data$us_equity_close) / head(combined_data$us_equity_close, -1))
+
+# Calculate percentage growth for intl_equity_close
+combined_data$intl_equity_growth <- c(NA, diff(combined_data$intl_equity_close) / head(combined_data$intl_equity_close, -1))
+
+# For bond_yield and short_term_yield, just divide by 100 to convert to decimals
+combined_data$bond_yield <- combined_data$bond_yield / 100
+combined_data$short_term_yield <- combined_data$short_term_yield / 100
+
+# Create a new dataset with only the percentage growth columns
+percentages <- combined_data[, c('date', 'inflation_rate_growth', 'wage_growth_growth', 
+                                 'us_equity_growth', 'intl_equity_growth', 
+                                 'bond_yield', 'short_term_yield')]
+
+# Drop the first month (first row)
+percentages <- percentages[-1, ]
+
+# Show the results
+print(percentages)
+
+
+```
+
+
+
+```{r}
+# Assuming the percentages data exists and starting salary is $50,000
+starting_salary <- 50000
+n_months <- nrow(percentages)  # Total number of months
+
+# Create a vector to store the salary for each month
+salary <- numeric(n_months)
+salary[1] <- starting_salary
+
+# Calculate salary growth over the months based on wage_growth_growth
+for (i in 2:n_months) {
+  salary[i] <- salary[i - 1] * (1 + percentages$wage_growth_growth[i - 1])
+}
+
+# Employee contribution percentages based on salary brackets
+employee_contribution <- numeric(n_months)
+for (i in 1:n_months) {
+  if (salary[i] <= 45000) {
+    employee_contribution[i] <- 0.03
+  } else if (salary[i] <= 55000) {
+    employee_contribution[i] <- 0.035
+  } else if (salary[i] <= 75000) {
+    employee_contribution[i] <- 0.045
+  } else if (salary[i] <= 100000) {
+    employee_contribution[i] <- 0.0575
+  } else {
+    employee_contribution[i] <- 0.06
+  }
+}
+
+# Employer contributions: 8% for the first 7 years, 10% thereafter
+employer_contribution <- numeric(n_months)
+years_of_service <- floor((1:n_months) / 12) + 1  # Convert months to years
+
+for (i in 1:n_months) {
+  if (years_of_service[i] <= 7) {
+    employer_contribution[i] <- 0.08
+  } else {
+    employer_contribution[i] <- 0.10
+  }
+}
+
+# Calculate monthly contributions for ORP (employee + employer)
+monthly_contribution_orp <- salary * (employee_contribution + employer_contribution)
+
+# Calculate compounded ORP balance
+orp_balance <- numeric(n_months)
+orp_balance[1] <- 0  # Assume no balance at the start
+
+for (i in 2:n_months) {
+  # Growth is applied according to equity, international equity, and bond growth
+  equity_growth <- percentages$us_equity_growth[i - 1] * 0.47 + percentages$intl_equity_growth[i - 1] * 0.32 + percentages$bond_yield[i - 1] * 0.21
+  orp_balance[i] <- orp_balance[i - 1] * (1 + equity_growth) + monthly_contribution_orp[i]
+}
+
+# Final ORP balance at retirement (end of the last month)
+final_orp_balance <- orp_balance[n_months]
+
+# Calculate 4% annual withdrawal rate for the first month of retirement
+orp_monthly_withdrawal <- final_orp_balance * 0.04 / 12
+
+# Calculate TRS pension benefit: Final Average Salary (FAS) based on last 3 years
+fas <- mean(salary[(n_months - 35):n_months])  # Last 36 months (3 years)
+years_served <- n_months / 12  # Years of service
+trs_benefit <- fas * 0.025 * years_served  # Assuming 2.5% per year
+
+# Monthly TRS benefit
+trs_monthly_benefit <- trs_benefit / 12
+
+# Output results
+cat("TRS Monthly Benefit at Retirement (First Month): $", round(trs_monthly_benefit, 2), "\n")
+cat("ORP Monthly Withdrawal (First Month): $", round(orp_monthly_withdrawal, 2), "\n")
+
+
+```
+
+## Fixed-Rate Analysis
+To modify the simulation and project an employee's pension benefit (TRS) or withdrawal amount (ORP) from retirement until death, we need to consider several key factors:
+
+Estimated Death Age: We'll assume a reasonable life expectancy for the employee.
+Cost-of-Living Adjustments (COLA) for TRS: We'll apply annual inflation adjustments to the TRS benefit, which increase by 50% of the CPI each year, capped at 3%.
+ORP Market Returns: We'll assume long-run average returns for the ORP portfolio, based on historical equity, bond, and international equity returns.
+Projecting Retirement Income: We will simulate the monthly income over time, considering the employee's longevity and both TRS and ORP scenarios.
+
+```{r}
+# Parameters
+death_age <- 85  # Assumed age of death
+start_age <- 50  # Starting age of the employee
+current_age <- start_age + 1  # Employee starts at 51 after the first year
+
+# Time to simulate (from retirement to death)
+years_of_retirement <- death_age - (start_age + (n_months / 12))  # Years from retirement to death
+total_months_in_retirement <- years_of_retirement * 12  # Total months in retirement
+
+# Initialize variables
+monthly_income_trs <- numeric(total_months_in_retirement)
+monthly_income_orp <- numeric(total_months_in_retirement)
+orp_balance_retirement <- final_orp_balance  # Starting ORP balance at retirement
+trs_benefit_retirement <- trs_monthly_benefit  # Starting TRS benefit at retirement
+
+# TRS: Apply COLA (cost of living adjustment) each year, capped at 3%
+for (i in 1:total_months_in_retirement) {
+  if (i %% 12 == 0) {  # At the start of each year
+    inflation_rate <- percentages$inflation_rate_growth[i %% n_months]  # Using inflation data from percentages
+    inflation_adjustment <- min(0.03, inflation_rate * 0.5)  # Apply COLA, capped at 3%
+    trs_benefit_retirement <- trs_benefit_retirement * (1 + inflation_adjustment)
+  }
+  monthly_income_trs[i] <- trs_benefit_retirement  # Monthly TRS income
+}
+
+# ORP: Apply 4% annual withdrawal rate and simulate market returns
+for (i in 1:total_months_in_retirement) {
+  # Apply monthly growth from historical returns (average returns assumed for simplicity)
+  average_market_growth <- mean(c(percentages$us_equity_growth, percentages$intl_equity_growth, percentages$bond_yield), na.rm = TRUE)
+  orp_balance_retirement <- orp_balance_retirement * (1 + average_market_growth / 12)  # Monthly compounded growth
+  orp_monthly_withdrawal <- orp_balance_retirement * 0.04 / 12  # 4% annual withdrawal rate
+  orp_balance_retirement <- orp_balance_retirement - orp_monthly_withdrawal  # Subtract withdrawal
+  
+  monthly_income_orp[i] <- orp_monthly_withdrawal  # Monthly ORP income
+  
+  # Stop the ORP withdrawals if the balance runs out
+  if (orp_balance_retirement <= 0) {
+    monthly_income_orp[i] <- 0
+    break
+  }
+}
+
+# Calculate the maximum and minimum income gap between TRS and ORP
+income_gap <- monthly_income_trs - monthly_income_orp
+max_gap <- max(income_gap, na.rm = TRUE)
+min_gap <- min(income_gap, na.rm = TRUE)
+
+# Calculate average monthly income for both TRS and ORP
+avg_income_trs <- mean(monthly_income_trs, na.rm = TRUE)
+avg_income_orp <- mean(monthly_income_orp, na.rm = TRUE)
+
+# Determine if ORP funds run out before death or if there are funds left for heirs
+if (orp_balance_retirement <= 0) {
+  run_out_of_funds <- TRUE
+  remaining_funds <- 0
+} else {
+  run_out_of_funds <- FALSE
+  remaining_funds <- orp_balance_retirement
+}
+
+# Output results
+cat("Average Monthly Income - TRS: $", round(avg_income_trs, 2), "\n")
+cat("Average Monthly Income - ORP: $", round(avg_income_orp, 2), "\n")
+cat("Maximum Monthly Income Gap (TRS vs ORP): $", round(max_gap, 2), "\n")
+cat("Minimum Monthly Income Gap (TRS vs ORP): $", round(min_gap, 2), "\n")
+cat("TRS Monthly Benefit at Retirement (First Month): $", round(trs_monthly_benefit, 2), "\n")
+cat("ORP Monthly Withdrawal at Retirement (First Month): $", round(orp_monthly_withdrawal, 2), "\n")
+
+if (run_out_of_funds) {
+  cat("ORP funds run out before death. There are no funds left for heirs.\n")
+} else {
+  cat("ORP funds last until death. Remaining funds for heirs: $", round(remaining_funds, 2), "\n")
+}
+
+```
+
