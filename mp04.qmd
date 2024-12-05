@@ -7,35 +7,27 @@ format:
     code-summary: "Show the code"
 ---
 
-
-
 ## Introduction
 
 Selecting a retirement plan is one of the most critical financial decisions for new CUNY faculty, as it has permanent implications for their long-term financial security. Once chosen, the plan cannot be changed, making it essential to consider the potential risks and rewards. This project evaluates the Teachers Retirement System (TRS) and the Optional Retirement Plan (ORP) using historical economic data and Monte Carlo simulations. By modeling contributions, investment returns, and inflation-adjusted benefits, we aim to provide a personalized, data-driven recommendation tailored to individual financial goals and risk tolerance.
-
 
 ## Objectives
 
 The primary goal of this project is to equip new CUNY faculty with an evidence-based recommendation for selecting the optimal retirement plan (TRS or ORP). This involves analyzing historical economic and financial data to assess how each plan performs under different economic conditions. We will utilize the following datasets:
 
-* Rate of Inflation:
-Inflation erodes the purchasing power of retirement benefits. For TRS, it determines the annual adjustment in benefits, while for ORP, it impacts the real value of savings and withdrawals.
-* Rate of Wage Growth:
-Wage growth directly influences contributions to both plans. For TRS, it affects the final average salary (FAS), which determines retirement payouts. For ORP, higher wages lead to larger investment contributions.
-* US Equity Market Returns:
-Equity market performance is crucial for ORP participants, as their investments grow with market returns. US equities represent a significant portion of most retirement portfolios.
-* International Equity Market Returns:
-Diversification through international equities reduces risk and enhances returns for ORP participants. It provides a broader perspective on investment performance beyond the US market.
-* Bond Returns:
-Bonds are a critical component of retirement portfolios, especially for ORP participants as they approach retirement. Bonds provide stability and reduce volatility in investment returns.
-* Short-Term Debt Returns:
-Short-term debt, such as Treasury yields, represents a safe investment option with lower risk. It is particularly relevant for retirees seeking liquidity and capital preservation.
+-   Rate of Inflation: Inflation erodes the purchasing power of retirement benefits. For TRS, it determines the annual adjustment in benefits, while for ORP, it impacts the real value of savings and withdrawals.
+-   Rate of Wage Growth: Wage growth directly influences contributions to both plans. For TRS, it affects the final average salary (FAS), which determines retirement payouts. For ORP, higher wages lead to larger investment contributions.
+-   US Equity Market Returns: Equity market performance is crucial for ORP participants, as their investments grow with market returns. US equities represent a significant portion of most retirement portfolios.
+-   International Equity Market Returns: Diversification through international equities reduces risk and enhances returns for ORP participants. It provides a broader perspective on investment performance beyond the US market.
+-   Bond Returns: Bonds are a critical component of retirement portfolios, especially for ORP participants as they approach retirement. Bonds provide stability and reduce volatility in investment returns.
+-   Short-Term Debt Returns: Short-term debt, such as Treasury yields, represents a safe investment option with lower risk. It is particularly relevant for retirees seeking liquidity and capital preservation.
 
 By combining insights from these datasets, we will simulate potential retirement outcomes for each plan, identify risks such as running out of funds, and quantify the financial benefits of each option. This comprehensive approach ensures that our recommendation aligns with the diverse financial priorities of faculty members.
 
-
 ### Libraries
-The following are the libraries we would use throughtout the project. 
+
+The following are the libraries we would use throughtout the project.
+
 ```{r}
 #| echo: true
 #| message: false
@@ -50,19 +42,19 @@ library(zoo)      # For handling time-series data and filling missing values
 
 ```
 
-
 ## Data Collection
+
 For this project, we will use data from two economic and financial data sources:
 
-1. **AlphaVantage**: A commercial stock market data provider.
-2. **FRED**: The Federal Reserve Economic Data repository maintained by the Federal Reserve Bank of St. Louis.
+1.  **AlphaVantage**: A commercial stock market data provider.
+2.  **FRED**: The Federal Reserve Economic Data repository maintained by the Federal Reserve Bank of St. Louis.
 
 FRED is free to access, but AlphaVantage is a commercial service requiring a subscription. For this mini-project, the free tier of AlphaVantage will suffice.
 
 ### Links to Resources
-- [AlphaVantage](https://www.alphavantage.co)
-- [FRED (Federal Reserve Economic Data)](https://fred.stlouisfed.org)
 
+-   [AlphaVantage](https://www.alphavantage.co)
+-   [FRED (Federal Reserve Economic Data)](https://fred.stlouisfed.org)
 
 ## DATA COLLECTION
 
@@ -87,7 +79,8 @@ alphavantage_key <- readLines("alphavantage_key.txt") # Ensure this file contain
 Time_Montly =as.Date("2009-01-01")
 ```
 
-1. Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
+1.  Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
+
 ```{r}
 # Fetch Inflation Data from FRED (CPI for NYC Metro Area)
 inflation_req <- request(fred_url) |>
@@ -117,8 +110,7 @@ cat("Rows with Missing Inflation Data: ", sum(is.na(inflation_df$inflation_rate)
 tail(inflation_df)
 ```
 
-
-2. Fetching Rate of Wage Growth from FRED, We’ll use the AHETPI series to measure wage growth.
+2.  Fetching Rate of Wage Growth from FRED, We’ll use the AHETPI series to measure wage growth.
 
 ```{r}
 # Fetch Wage Growth Data from FRED
@@ -153,7 +145,8 @@ cat("Rows with Missing Wage Growth Data: ", missing_rows, "\n")
 tail(wage_growth_df)
 ```
 
-3. Fetching US Equity Market Returns from AlphaVantage
+3.  Fetching US Equity Market Returns from AlphaVantage
+
 ```{r}
 # Fetch US Equity Market Data from AlphaVantage
 us_equity_req <- request(alphavantage_url) |>
@@ -187,8 +180,7 @@ tail(us_equity_df)
 
 ```
 
-
-4. Fetching International Equity Market Returns from AlphaVantage
+4.  Fetching International Equity Market Returns from AlphaVantage
 
 ```{r}
 # Fetch International Equity Market Data from AlphaVantage
@@ -222,8 +214,7 @@ head(intl_equity_df)
 
 ```
 
-
-5. Fetching Bond Returns from AlphaVantage
+5.  Fetching Bond Returns from AlphaVantage
 
 ```{r}
 # Fetch Bond Yield Data (Daily)
@@ -266,13 +257,12 @@ cat("Total Rows in Bond Yield Data (Monthly): ", nrow(bond_df), "\n")
 cat("Rows with Missing Bond Yield Data: ", sum(is.na(bond_df$bond_yield)), "\n")
 
 # Preview the Data
-print(tail(bond_df))
+print(tail(bond_df,100))
 
 
 ```
 
-
-6. Fetching Short-Term Debt Returns from AlphaVantage: for this dataset, we need to downsample the daily data to monthly averages to align with the other datasets.
+6.  Fetching Short-Term Debt Returns from AlphaVantage: for this dataset, we need to downsample the daily data to monthly averages to align with the other datasets.
 
 ```{r}
 # Fetch Short-Term Debt Data (2-Year Treasury Yield) - Attempt Monthly Query
@@ -304,8 +294,8 @@ cat("Rows with Missing Short-Term Yield Data: ", sum(is.na(short_term_df$short_t
 tail(short_term_df)
 ```
 
-
 ## Data Preprocessing and Cleaning
+
 Now that we have collected the data, we can proceed to the next step, which is data preprocessing. We we gonna unify the data and deal with missing values by using bootstrapping.
 
 ```{r}
@@ -382,28 +372,6 @@ combined_data <- combined_data %>%
                                sample(na.omit(short_term_yield), size = sum(is.na(short_term_yield)), replace = TRUE))
   )
 
-# Handle outliers by capping them
-combined_data <- combined_data %>%
-  mutate(
-    inflation_rate = cap_outlier(inflation_rate, 
-                                 lower_bound = quantile(inflation_rate, 0.01, na.rm = TRUE), 
-                                 upper_bound = quantile(inflation_rate, 0.99, na.rm = TRUE)),
-    wage_growth = cap_outlier(wage_growth, 
-                              lower_bound = quantile(wage_growth, 0.01, na.rm = TRUE), 
-                              upper_bound = quantile(wage_growth, 0.99, na.rm = TRUE)),
-    us_equity_close = cap_outlier(us_equity_close, 
-                                  lower_bound = quantile(us_equity_close, 0.01, na.rm = TRUE), 
-                                  upper_bound = quantile(us_equity_close, 0.99, na.rm = TRUE)),
-    intl_equity_close = cap_outlier(intl_equity_close, 
-                                    lower_bound = quantile(intl_equity_close, 0.01, na.rm = TRUE), 
-                                    upper_bound = quantile(intl_equity_close, 0.99, na.rm = TRUE)),
-    bond_yield = cap_outlier(bond_yield, 
-                             lower_bound = quantile(bond_yield, 0.01, na.rm = TRUE), 
-                             upper_bound = quantile(bond_yield, 0.99, na.rm = TRUE)),
-    short_term_yield = cap_outlier(short_term_yield, 
-                                   lower_bound = quantile(short_term_yield, 0.01, na.rm = TRUE), 
-                                   upper_bound = quantile(short_term_yield, 0.99, na.rm = TRUE))
-  )
 
 # Validate the final dataset
 cat("After handling missing values and outliers:\n")
@@ -414,13 +382,15 @@ print(missing_summary_after)
 # You can now proceed with additional analysis or visualization
 tail(combined_data)
 ```
+
 ```{r}
 
 tail(combined_data)
 ```
+
 ## Initial Analysis
 
-Now that we have a clean dataset, we can perform some initial analysis to understand the trends and relationships between the variables. 
+Now that we have a clean dataset, we can perform some initial analysis to understand the trends and relationships between the variables.
 
 We will visualize the data using line plots and we going to display them in pairs to compare the trends between the variables. so it would be inflation rate and wage growth, US equity and International equity, and Bond Yield and Short-Term Yield.
 
@@ -498,7 +468,6 @@ p3
 
 We will calculate the correlation matrix to understand the relationships between the variables. This will help us identify any significant correlations that can inform our analysis and decision-making process.
 
-
 ```{r}
 # Load the necessary library
 library(ggcorrplot)
@@ -535,45 +504,51 @@ In this analysis, we examine the relationships between several key economic fact
 ## Key Findings:
 
 ### 1. Inflation Rate and Wage Growth:
-- **Correlation**: 0.98 (Very strong)
-- **Interpretation**: When inflation increases, wage growth tends to follow suit. This suggests that as the cost of living rises, your wages are likely to increase as well, which helps you keep up with inflation.
+
+-   **Correlation**: 0.98 (Very strong)
+-   **Interpretation**: When inflation increases, wage growth tends to follow suit. This suggests that as the cost of living rises, your wages are likely to increase as well, which helps you keep up with inflation.
 
 ### 2. Stock Market Returns:
 
 #### US and International Markets:
-- **Correlation**: 0.97 (Very strong)
-- **Interpretation**: US and international stock markets have a highly positive correlation, meaning they often move in the same direction. This makes diversification between US and international markets a good strategy for reducing risk while maintaining growth potential.
+
+-   **Correlation**: 0.97 (Very strong)
+-   **Interpretation**: US and international stock markets have a highly positive correlation, meaning they often move in the same direction. This makes diversification between US and international markets a good strategy for reducing risk while maintaining growth potential.
 
 #### US Equity Returns and Bond Yields:
-- **Correlation**: 0.68 (Moderate)
-- **Interpretation**: The moderate correlation suggests that when US stocks perform well, bond yields may not follow the same trend. Investors need to balance their portfolios between stocks and bonds, taking into account their risk tolerance and time horizon.
+
+-   **Correlation**: 0.68 (Moderate)
+-   **Interpretation**: The moderate correlation suggests that when US stocks perform well, bond yields may not follow the same trend. Investors need to balance their portfolios between stocks and bonds, taking into account their risk tolerance and time horizon.
 
 ### 3. Inflation and Other Variables:
 
 #### Inflation and US Stock Returns:
-- **Correlation**: 0.92 (Strong)
-- **Interpretation**: Inflation and US stock returns are highly correlated. As inflation rises, US stocks tend to perform well, making stocks a potential hedge against inflation.
+
+-   **Correlation**: 0.92 (Strong)
+-   **Interpretation**: Inflation and US stock returns are highly correlated. As inflation rises, US stocks tend to perform well, making stocks a potential hedge against inflation.
 
 #### Inflation and International Stock Returns:
-- **Correlation**: 0.97 (Very strong)
-- **Interpretation**: Like US stocks, international stocks also tend to rise with inflation, making global diversification a viable strategy for mitigating inflation risk.
+
+-   **Correlation**: 0.97 (Very strong)
+-   **Interpretation**: Like US stocks, international stocks also tend to rise with inflation, making global diversification a viable strategy for mitigating inflation risk.
 
 #### Inflation and Bond Yields:
-- **Correlation**: 0.72 (Moderate)
-- **Interpretation**: Inflation and bond yields are moderately correlated. Rising inflation generally leads to higher bond yields, which can help protect fixed-income investments from losing purchasing power.
+
+-   **Correlation**: 0.72 (Moderate)
+-   **Interpretation**: Inflation and bond yields are moderately correlated. Rising inflation generally leads to higher bond yields, which can help protect fixed-income investments from losing purchasing power.
 
 ### 4. Bond Yield and Short-Term Yield:
-- **Correlation**: 0.75 (Strong)
-- **Interpretation**: Bond yields and short-term yields tend to move in the same direction, which suggests that both types of bonds respond similarly to changes in interest rates.
+
+-   **Correlation**: 0.75 (Strong)
+-   **Interpretation**: Bond yields and short-term yields tend to move in the same direction, which suggests that both types of bonds respond similarly to changes in interest rates.
 
 ## Implications for Retirement Planning:
 
-- **Wage Growth and Inflation**: The close correlation between wage growth and inflation means that as prices rise, your income should likely increase, helping you maintain purchasing power in retirement.
-  
-- **Equity Market Performance**: The strong correlation between US and international equity returns allows for diversification between these markets without sacrificing performance.
-  
-- **Bonds and Short-Term Yields**: Understanding the relationship between bonds and short-term debt yields is crucial for managing fixed-income investments in a rising interest rate environment.
+-   **Wage Growth and Inflation**: The close correlation between wage growth and inflation means that as prices rise, your income should likely increase, helping you maintain purchasing power in retirement.
 
+-   **Equity Market Performance**: The strong correlation between US and international equity returns allows for diversification between these markets without sacrificing performance.
+
+-   **Bonds and Short-Term Yields**: Understanding the relationship between bonds and short-term debt yields is crucial for managing fixed-income investments in a rising interest rate environment.
 
 ## Historical Comparison of TRS and ORP
 
@@ -581,181 +556,244 @@ In this analysis, we examine the relationships between several key economic fact
 
 In this section, we compare the **Teachers Retirement System (TRS)** and the **Optional Retirement Plan (ORP)** for the first month of retirement, assuming:
 
-- **Career Timeline**: Employee joined CUNY in **January 2009** and retired in **November 2024**.
-- **Starting Salary**: $50,000 in **2009**, adjusted annually for historical wage growth (using actual wage growth data).
-- **Fixed Plan Parameters**: Contribution rates and retirement benefits remain constant during the employee’s career.
+-   **Career Timeline**: Employee joined CUNY in **January 2009** and retired in **November 2024**.
+-   **Starting Salary**: \$50,000 in **2009**, adjusted annually for historical wage growth (using actual wage growth data).
+-   **Fixed Plan Parameters**: Contribution rates and retirement benefits remain constant during the employee’s career.
 
 ### Plan Overviews
 
 #### TRS (Teachers Retirement System)
-- **Defined-Benefit Plan**:
-  - Retirement income is based on the **Final Average Salary (FAS)** and years of service.
-- **Retirement Benefit Formula**:
-  - \( \text{Benefit} = \text{FAS} \times \left(\frac{\text{Years of Service}}{2}\right) \), capped at **30 years of service**.
-- **Inflation Adjustment**:
-  - **Annual increase** of **50% of CPI**, capped between **1% and 3%** annually.
+
+-   **Defined-Benefit Plan**:
+    -   Retirement income is based on the **Final Average Salary (FAS)** and years of service.
+-   **Retirement Benefit Formula**:
+    -   ( \text{Benefit} = \text{FAS} \times \left(\frac{\text{Years of Service}}{2}\right) ), capped at **30 years of service**.
+-   **Inflation Adjustment**:
+    -   **Annual increase** of **50% of CPI**, capped between **1% and 3%** annually.
 
 #### ORP (Optional Retirement Plan)
-- **Defined-Contribution Plan**:
-  - Employee and employer contribute to an individual retirement account, invested in a **Fidelity Freedom Fund**.
-- **Contributions**:
-  - **Employee**: Salary-based contribution (e.g., 3% for salaries ≤$45,000; 3.5% for $45,001–$55,000).
-  - **Employer**: 8% for the first 7 years, then 10% for subsequent years.
-- **Investment Returns**:
-  - US equities: **7%**, International equities: **6%**, Bonds: **4%**.
-- **Retirement Strategy**: Withdraw **4%** of accumulated funds annually at retirement.
 
----
+-   **Defined-Contribution Plan**:
+    -   Employee and employer contribute to an individual retirement account, invested in a **Fidelity Freedom Fund**.
+-   **Contributions**:
+    -   **Employee**: Salary-based contribution (e.g., 3% for salaries ≤\$45,000; 3.5% for \$45,001–\$55,000).
+    -   **Employer**: 8% for the first 7 years, then 10% for subsequent years.
+-   **Investment Returns**:
+    -   US equities: **7%**, International equities: **6%**, Bonds: **4%**.
+-   **Retirement Strategy**: Withdraw **4%** of accumulated funds annually at retirement.
+
+------------------------------------------------------------------------
 
 ### Step-by-Step Analysis
 
 #### 1. **Starting Salary**
-- The employee’s starting salary is **$50,000** in **January 2009**.
-- The salary increases **annually** based on historical wage growth data.
+
+-   The employee’s starting salary is **\$50,000** in **January 2009** and is retired in **November 2024**. Years served = 15 years.
+-   The salary increases **annually** based on historical wage growth data.
 
 #### 2. **TRS Benefit Calculation**
-- **Final Average Salary (FAS)**:
-  - Calculated as the average of the last three years of salary, adjusted for wage growth.
-- **Years of Service**:
-  - The employee works for **15 years** (from 2009 to 2024), and their pension benefit is calculated based on **15 years of service**.
-- **Monthly Pension**:
-  - The pension benefit is calculated as \( \text{FAS} \times \left(\frac{15}{2}\right) \) (since the employee works 15 years).
-- **Inflation Adjustment**:
-  - The pension benefit will be **inflation-adjusted** annually based on the **CPI**. The adjustment will be between **1% and 3%** per year, applied each September after retirement.
+
+-   **Final Average Salary (FAS)**:
+    -   Calculated as the average of the last three years of salary, adjusted for wage growth.
+-   **Years of Service**:
+    -   The employee works for **15 years** (from 2009 to 2024), and their pension benefit is calculated based on **15 years of service**.
+-   **Monthly Pension**:
+    -   The pension benefit is calculated as ( \text{FAS} \times \left(\frac{15}{2}\right) ) (since the employee works 15 years).
+-   **Inflation Adjustment**:
+    -   The pension benefit will be **inflation-adjusted** annually based on the **CPI**. The adjustment will be between **1% and 3%** per year, applied each September after retirement.
 
 #### 3. **ORP Benefit Calculation**
-- **Monthly Contributions**:
-  - The employee and employer contributions are calculated based on the **salary brackets** (e.g., 3% for salaries ≤$45,000).
-  - Contributions are made monthly throughout the employee’s **15-year** career.
-- **Investment Growth**:
-  - The employee’s contributions grow using the average market returns over time:
-    - US equities: **7%**, International equities: **6%**, Bonds: **4%**.
-- **Retirement Withdrawal**:
-  - The employee can begin withdrawing funds from their ORP account upon retirement.
-  - A general rule of thumb is to withdraw **4%** annually from the accumulated balance at retirement.
 
----
+-   **Monthly Contributions**:
+    -   The employee and employer contributions are calculated based on the **salary brackets** (e.g., 3% for salaries ≤\$45,000).
+    -   Contributions are made monthly throughout the employee’s **15-year** career.
+-   **Investment Growth**:
+    -   The employee’s contributions grow using the average market returns over time:
+        -   US equities: **7%**, International equities: **6%**, Bonds: **4%**.
+-   **Retirement Withdrawal**:
+    -   The employee can begin withdrawing funds from their ORP account upon retirement.
+    -   A general rule of thumb is to withdraw **4%** annually from the accumulated balance at retirement.
+
+------------------------------------------------------------------------
 
 The following code snippets will calculate the retirement benefits for both TRS and ORP based on the assumptions outlined above. We will compare the monthly benefits and accumulated funds for each plan to provide a comprehensive analysis of the retirement options.
 
-
 ```{r}
-# Assuming the dataset 'combined_data' already exists
-# Calculate percentage growth for inflation_rate
-combined_data$inflation_rate_growth <- c(NA, diff(combined_data$inflation_rate) / head(combined_data$inflation_rate, -1))
+# Load necessary libraries
+library(dplyr)
+library(lubridate)
 
-# Calculate percentage growth for wage_growth
-combined_data$wage_growth_growth <- c(NA, diff(combined_data$wage_growth) / head(combined_data$wage_growth, -1))
+# Assuming combined_data has been preprocessed correctly (with inflation_rate as percentage and correct dates)
 
-# Calculate percentage growth for us_equity_close
-combined_data$us_equity_growth <- c(NA, diff(combined_data$us_equity_close) / head(combined_data$us_equity_close, -1))
+# Set initial salary and define years of service
+initial_salary <- 60000
+years_of_service <- 15  # Adjusted to 15 years
 
-# Calculate percentage growth for intl_equity_close
-combined_data$intl_equity_growth <- c(NA, diff(combined_data$intl_equity_close) / head(combined_data$intl_equity_close, -1))
+# Initialize a vector to store salaries for each year
+salaries <- numeric(years_of_service)
+salary_growth <- numeric(years_of_service)
+cpi_growth <- numeric(years_of_service)
+salary_increase <- numeric(years_of_service)
 
-# For bond_yield and short_term_yield, just divide by 100 to convert to decimals
-combined_data$bond_yield <- combined_data$bond_yield / 100
-combined_data$short_term_yield <- combined_data$short_term_yield / 100
+# Set the first salary as the initial salary
+salaries[1] <- initial_salary
 
-# Create a new dataset with only the percentage growth columns
-percentages <- combined_data[, c('date', 'inflation_rate_growth', 'wage_growth_growth', 
-                                 'us_equity_growth', 'intl_equity_growth', 
-                                 'bond_yield', 'short_term_yield')]
+# Loop through the combined data for yearly salary growth calculation
+for (i in 2:years_of_service) {
+  # We need CPI data for each September to calculate the salary for the next year
+  # Calculate the CPI growth between September (from the previous year) and September of the current year
+  
+  september_cpi_previous_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2008 + (i - 1))]
+  september_cpi_current_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2008 + i)]
+  
+  # Calculate the salary growth rate based on CPI change
+  cpi_growth[i] <- september_cpi_current_year / september_cpi_previous_year
+  salary_growth[i] <- cpi_growth[i]
+  
+  # Calculate the increase in salary
+  salary_increase[i] <- salaries[i-1] * (cpi_growth[i] - 1)  # Difference from the previous salary
+  
+  # Apply the salary growth to the previous year's salary
+  salaries[i] <- salaries[i-1] * cpi_growth[i]  
+}
 
-# Drop the first month (first row)
-percentages <- percentages[-1, ]
+# Calculate Final Average Salary (FAS) - which is the average of the last 3 years' salary
+fas <- mean(salaries[(years_of_service-2):years_of_service])
 
-# Show the results
-print(percentages)
+# Calculate the Annual Retirement Benefit based on years of service
+if (years_of_service <= 20) {
+  annual_benefit <- 0.0167 * fas * years_of_service
+} else if (years_of_service == 20) {
+  annual_benefit <- 0.0175 * fas * years_of_service
+} else {
+  annual_benefit <- (0.35 + 0.02 * years_of_service) * fas
+}
 
+# Display the results
+cat("Annual TRS Benefit: $", round(annual_benefit, 2), "\n")
+cat("Monthly TRS Benefit: $", round(annual_benefit/12), "\n")
 
+print(salaries)
 ```
 
-
-
 ```{r}
-# Assuming the percentages data exists and starting salary is $50,000
-starting_salary <- 50000
-n_months <- nrow(percentages)  # Total number of months
+# Assuming combined_data has been preprocessed correctly (with inflation_rate as percentage and correct dates)
 
-# Create a vector to store the salary for each month
-salary <- numeric(n_months)
-salary[1] <- starting_salary
+# Initialize parameters
+initial_salary <- 60000  # Starting salary
+years_of_service <- 15   # Number of years to simulate
 
-# Calculate salary growth over the months based on wage_growth_growth
-for (i in 2:n_months) {
-  salary[i] <- salary[i - 1] * (1 + percentages$wage_growth_growth[i - 1])
-}
+# Set up asset allocation for Age 50 to 59 (First 10 years) and Age 60 to 74 (Next 5 years)
+equity_us_alloc <- 0.47  # US Equities allocation for Age 50 to 59
+equity_international_alloc <- 0.32  # International Equities allocation for Age 50 to 59
+bonds_alloc <- 0.21  # Bonds allocation for Age 50 to 59
 
-# Employee contribution percentages based on salary brackets
-employee_contribution <- numeric(n_months)
-for (i in 1:n_months) {
-  if (salary[i] <= 45000) {
-    employee_contribution[i] <- 0.03
-  } else if (salary[i] <= 55000) {
-    employee_contribution[i] <- 0.035
-  } else if (salary[i] <= 75000) {
-    employee_contribution[i] <- 0.045
-  } else if (salary[i] <= 100000) {
-    employee_contribution[i] <- 0.0575
+equity_us_alloc_older <- 0.34  # US Equities allocation for Age 60 to 74
+equity_international_alloc_older <- 0.23  # International Equities allocation for Age 60 to 74
+bonds_alloc_older <- 0.43  # Bonds allocation for Age 60 to 74
+
+# Initialize vectors to store results
+salaries <- numeric(years_of_service)
+employee_contributions <- numeric(years_of_service)
+employer_contributions <- numeric(years_of_service)
+orp_balance <- numeric(years_of_service)
+
+# Initial salary for the first year
+salaries[1] <- initial_salary
+
+# Loop through each year and compute monthly contributions and ORP balance
+for (i in 1:years_of_service) {
+  
+  # Get the salary for the year (starting with initial salary for the first year)
+  if (i == 1) {
+    salary <- initial_salary
   } else {
-    employee_contribution[i] <- 0.06
+    # For subsequent years, use the previous year's salary and adjust based on CPI
+    september_cpi_previous_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2008 + (i - 1))]
+    september_cpi_current_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2008 + i)]
+    
+    # Calculate the salary growth rate based on CPI change (year over year growth)
+    cpi_growth <- september_cpi_current_year / september_cpi_previous_year
+    salary <- salaries[i - 1] * cpi_growth  # Update salary based on CPI growth
+  }
+  
+  # Store the salary
+  salaries[i] <- salary
+  
+  # Calculate monthly salary (divide the annual salary by 12)
+  monthly_salary <- salary / 12
+  
+  # Employee contribution calculation based on salary brackets (annual contribution, divided by 12 for monthly)
+  if (salary <= 45000) {
+    employee_contribution <- (salary * 0.03) / 12
+  } else if (salary <= 55000) {
+    employee_contribution <- (salary * 0.035) / 12
+  } else if (salary <= 75000) {
+    employee_contribution <- (salary * 0.045) / 12
+  } else if (salary <= 100000) {
+    employee_contribution <- (salary * 0.0575) / 12
+  } else {
+    employee_contribution <- (salary * 0.06) / 12
+  }
+
+  # Employer contribution: 8% for the first 7 years, 10% after (annual contribution, divided by 12 for monthly)
+  if (i <= 7) {
+    employer_contribution <- (salary * 0.08) / 12
+  } else {
+    employer_contribution <- (salary * 0.10) / 12
+  }
+  
+  # Calculate total contribution (employee + employer)
+  total_contribution <- employee_contribution + employer_contribution
+  
+  # Store contributions
+  employee_contributions[i] <- employee_contribution
+  employer_contributions[i] <- employer_contribution
+  
+  # Asset allocation: Based on employee's age (years of service)
+  if (i <= 10) {  # First 10 years (Age 50 to 59)
+    # Calculate monthly growth rates for US Equities, International Equities, and Bonds
+    us_equity_growth_rate <- 1 + (combined_data$us_equity_close[i] / combined_data$us_equity_close[i - 1] - 1) * equity_us_alloc
+    intl_equity_growth_rate <- 1 + (combined_data$intl_equity_close[i] / combined_data$intl_equity_close[i - 1] - 1) * equity_international_alloc
+    bond_growth_rate <- 1 + (combined_data$bond_yield[i] / 100) * bonds_alloc
+    
+  } else {  # Age 60 to 74
+    # Calculate monthly growth rates for US Equities, International Equities, and Bonds
+    us_equity_growth_rate <- 1 + (combined_data$us_equity_close[i] / combined_data$us_equity_close[i - 1] - 1) * equity_us_alloc_older
+    intl_equity_growth_rate <- 1 + (combined_data$intl_equity_close[i] / combined_data$intl_equity_close[i - 1] - 1) * equity_international_alloc_older
+    bond_growth_rate <- 1 + (combined_data$bond_yield[i] / 100) * bonds_alloc_older
+  }
+  
+  # Calculate the total growth rate for the year based on asset allocation
+  total_growth_rate <- us_equity_growth_rate + intl_equity_growth_rate + bond_growth_rate
+  
+  # Initialize the ORP balance for the first year
+  if (i == 1) {
+    orp_balance[i] <- total_contribution
+  } else {
+    # Apply compound growth and add monthly contributions
+    orp_balance[i] <- orp_balance[i - 1] * total_growth_rate + total_contribution
   }
 }
 
-# Employer contributions: 8% for the first 7 years, 10% thereafter
-employer_contribution <- numeric(n_months)
-years_of_service <- floor((1:n_months) / 12) + 1  # Convert months to years
+# Output the data with monthly contributions and ORP balance for each year
+yearly_orp_data <- data.frame(
+  Year = 1:years_of_service,
+  Salary = round(salaries, 2),
+  Employee_Contribution = round(employee_contributions, 2),
+  Employer_Contribution = round(employer_contributions, 2),
+  Total_Contribution = round(employee_contributions + employer_contributions, 2),
+  ORP_Balance = round(orp_balance, 2)
+)
 
-for (i in 1:n_months) {
-  if (years_of_service[i] <= 7) {
-    employer_contribution[i] <- 0.08
-  } else {
-    employer_contribution[i] <- 0.10
-  }
-}
-
-# Calculate monthly contributions for ORP (employee + employer)
-monthly_contribution_orp <- salary * (employee_contribution + employer_contribution)
-
-# Calculate compounded ORP balance
-orp_balance <- numeric(n_months)
-orp_balance[1] <- 0  # Assume no balance at the start
-
-for (i in 2:n_months) {
-  # Growth is applied according to equity, international equity, and bond growth
-  equity_growth <- percentages$us_equity_growth[i - 1] * 0.47 + percentages$intl_equity_growth[i - 1] * 0.32 + percentages$bond_yield[i - 1] * 0.21
-  orp_balance[i] <- orp_balance[i - 1] * (1 + equity_growth) + monthly_contribution_orp[i]
-}
-
-# Final ORP balance at retirement (end of the last month)
-final_orp_balance <- orp_balance[n_months]
-
-# Calculate 4% annual withdrawal rate for the first month of retirement
-orp_monthly_withdrawal <- final_orp_balance * 0.04 / 12
-
-# Calculate TRS pension benefit: Final Average Salary (FAS) based on last 3 years
-fas <- mean(salary[(n_months - 35):n_months])  # Last 36 months (3 years)
-years_served <- n_months / 12  # Years of service
-trs_benefit <- fas * 0.025 * years_served  # Assuming 2.5% per year
-
-# Monthly TRS benefit
-trs_monthly_benefit <- trs_benefit / 12
-
-# Output results
-cat("TRS Monthly Benefit at Retirement (First Month): $", round(trs_monthly_benefit, 2), "\n")
-cat("ORP Monthly Withdrawal (First Month): $", round(orp_monthly_withdrawal, 2), "\n")
-
-
+print(yearly_orp_data)
 ```
 
 ## Fixed-Rate Analysis
+
 To modify the simulation and project an employee's pension benefit (TRS) or withdrawal amount (ORP) from retirement until death, we need to consider several key factors:
 
-Estimated Death Age: We'll assume a reasonable life expectancy for the employee.
-Cost-of-Living Adjustments (COLA) for TRS: We'll apply annual inflation adjustments to the TRS benefit, which increase by 50% of the CPI each year, capped at 3%.
-ORP Market Returns: We'll assume long-run average returns for the ORP portfolio, based on historical equity, bond, and international equity returns.
-Projecting Retirement Income: We will simulate the monthly income over time, considering the employee's longevity and both TRS and ORP scenarios.
+Estimated Death Age: We'll assume a reasonable life expectancy for the employee. Cost-of-Living Adjustments (COLA) for TRS: We'll apply annual inflation adjustments to the TRS benefit, which increase by 50% of the CPI each year, capped at 3%. ORP Market Returns: We'll assume long-run average returns for the ORP portfolio, based on historical equity, bond, and international equity returns. Projecting Retirement Income: We will simulate the monthly income over time, considering the employee's longevity and both TRS and ORP scenarios.
 
 ```{r}
 # Parameters
@@ -833,4 +871,12 @@ if (run_out_of_funds) {
 }
 
 ```
+
+
+I want to expleriment something, lets do  just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. THE NEW SALARY. Meaning, you would see the initial salary of 60000, then, the new salary would be in september. To get the new salary you would use wage growth. so YOU WOULD get the september of the first year, I want to expleriment something, lets do  just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. to get the new salary, what you would do is use the CPI. So you would see the september cpi fore exapme of the first year and januar, and you would divide september cpi inflation growth and january for the firs one. FOr the second year, you would use september of the first year 2009 and september of the new year of the cpi divided in that way you get the percentage. and you would multiply the salary by that percentage. 
+
+with that you would get the new salary for each year. until retirement. Now we need to use this formaula. 0.0167* FAS * years of service. so we need to get the FAS, TO GET FAS IS THE average salary for the las 3 years. 
+with the last formula you would get the benefits for the program. 
+
+
 
