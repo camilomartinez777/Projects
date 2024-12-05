@@ -38,7 +38,9 @@ library(httr2)    # For API requests
 library(dplyr)    # For data manipulation
 library(ggplot2)  # For visualization
 library(zoo)      # For handling time-series data and filling missing values
-
+library(DT)
+library(ggcorrplot)
+library(lubridate)
 
 ```
 
@@ -60,7 +62,7 @@ FRED is free to access, but AlphaVantage is a commercial service requiring a sub
 
 We would proceed to collect the data from the sources mentioned above. and we would do it on a monthly basis for the last 15 years.
 
-Tod do so, we would use their Apis:
+To do so, we would use their APIs:
 
 ```{r}
 # Define the base URL for the FRED API
@@ -79,9 +81,16 @@ alphavantage_key <- readLines("alphavantage_key.txt") # Ensure this file contain
 Time_Montly =as.Date("2009-01-01")
 ```
 
-1.  Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
+## Fetching Data
+
+We already have the links to the resources and the API keys, now we can proceed to fetch the data.
+
+-   1.Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 # Fetch Inflation Data from FRED (CPI for NYC Metro Area)
 inflation_req <- request(fred_url) |>
   req_url_query(
@@ -101,16 +110,9 @@ inflation_df <- data.frame(
 
 # Filter the data for the last 15 years
 inflation_df <- inflation_df |> filter(date >= Time_Montly)
-
-# Count the rows and check for missing data
-cat("Total Rows in Inflation Data: ", nrow(inflation_df), "\n")
-cat("Rows with Missing Inflation Data: ", sum(is.na(inflation_df$inflation_rate)), "\n")
-
-# Preview the data
-tail(inflation_df)
 ```
 
-2.  Fetching Rate of Wage Growth from FRED, We’ll use the AHETPI series to measure wage growth.
+- 2. Fetching Rate of Wage Growth from FRED, We’ll use the AHETPI series to measure wage growth.
 
 ```{r}
 # Fetch Wage Growth Data from FRED
@@ -132,20 +134,9 @@ wage_growth_df <- data.frame(
 
 # Filter data for the last 15–20 years
 wage_growth_df <- wage_growth_df |> filter(date >= Time_Montly)
-
-# Check the data
-total_rows <- nrow(wage_growth_df)
-missing_rows <- sum(is.na(wage_growth_df$wage_growth))
-
-# Output results
-cat("Total Rows in Wage Growth Data: ", total_rows, "\n")
-cat("Rows with Missing Wage Growth Data: ", missing_rows, "\n")
-
-# Preview the first few rows of the dataset
-tail(wage_growth_df)
 ```
 
-3.  Fetching US Equity Market Returns from AlphaVantage
+- 3. Fetching US Equity Market Returns from AlphaVantage
 
 ```{r}
 # Fetch US Equity Market Data from AlphaVantage
@@ -169,18 +160,9 @@ us_equity_df$date <- as.Date(format(us_equity_df$date, "%Y-%m-01"))
 
 # Filter for the past 15 years
 us_equity_df <- us_equity_df |> filter(date >= Time_Montly)
-
-# Check Data Quality
-cat("Total Rows in US Equity Data: ", nrow(us_equity_df), "\n")
-cat("Rows with Missing US Equity Data: ", sum(is.na(us_equity_df$us_equity_close)), "\n")
-
-# Preview Data
-tail(us_equity_df)
-
-
 ```
 
-4.  Fetching International Equity Market Returns from AlphaVantage
+- 4. Fetching International Equity Market Returns from AlphaVantage
 
 ```{r}
 # Fetch International Equity Market Data from AlphaVantage
@@ -205,18 +187,14 @@ intl_equity_df$date <- as.Date(format(intl_equity_df$date, "%Y-%m-01"))
 
 # Filter for the past 15 years
 intl_equity_df <- intl_equity_df |> filter(date >= Time_Montly)
-
-# Print information about the dataset
-cat("Total Rows in International Equity Data: ", nrow(intl_equity_df), "\n")
-cat("Rows with Missing International Equity Data: ", sum(is.na(intl_equity_df$intl_equity_close)), "\n")
-
-head(intl_equity_df)
-
 ```
 
-5.  Fetching Bond Returns from AlphaVantage
+- 5. Fetching Bond Returns from AlphaVantage
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 # Fetch Bond Yield Data (Daily)
 bond_req <- request(fred_url) |>
   req_url_query(
@@ -234,10 +212,6 @@ bond_df <- data.frame(
   bond_yield = as.numeric(sapply(bond_data, function(x) x$value))
 )
 
-# Summary of Fetched Data
-cat("Total Rows in Bond Yield Data: ", nrow(bond_df), "\n")
-cat("Rows with Missing Bond Yield Data: ", sum(is.na(bond_df$bond_yield)), "\n")
-
 # Downsample to Monthly Averages
 bond_df <- bond_df |>
   mutate(month = format(date, "%Y-%m")) |># Extract year-month for grouping
@@ -251,20 +225,14 @@ bond_df <- bond_df |>
 
 # Filter for the last 15 years
 bond_df <- bond_df |> filter(date >= Time_Montly)
-
-# Summary after Downsampling
-cat("Total Rows in Bond Yield Data (Monthly): ", nrow(bond_df), "\n")
-cat("Rows with Missing Bond Yield Data: ", sum(is.na(bond_df$bond_yield)), "\n")
-
-# Preview the Data
-print(tail(bond_df,100))
-
-
 ```
 
-6.  Fetching Short-Term Debt Returns from AlphaVantage: for this dataset, we need to downsample the daily data to monthly averages to align with the other datasets.
+- 6.  Fetching Short-Term Debt Returns from AlphaVantage: for this dataset, we need to downsample the daily data to monthly averages to align with the other datasets.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 # Fetch Short-Term Debt Data (2-Year Treasury Yield) - Attempt Monthly Query
 short_term_req <- request(fred_url) |>
   req_url_query(
@@ -285,13 +253,6 @@ short_term_df <- data.frame(
 
 # Filter for the Last 15 Years
 short_term_df <- short_term_df |> filter(date >= Time_Montly)
-
-# Check Total Rows and Missing Data
-cat("Total Rows in Short-Term Yield Data (Monthly): ", nrow(short_term_df), "\n")
-cat("Rows with Missing Short-Term Yield Data: ", sum(is.na(short_term_df$short_term_yield)), "\n")
-
-# Preview the Data
-tail(short_term_df)
 ```
 
 ## Data Preprocessing and Cleaning
@@ -299,23 +260,17 @@ tail(short_term_df)
 Now that we have collected the data, we can proceed to the next step, which is data preprocessing. We we gonna unify the data and deal with missing values by using bootstrapping.
 
 ```{r}
-# Load necessary libraries for analysis and visualization
-library(dplyr)
-library(ggplot2)
-
-# Define a function to cap outliers
-cap_outlier <- function(x, lower_bound, upper_bound) {
-  x[x < lower_bound] <- lower_bound
-  x[x > upper_bound] <- upper_bound
-  return(x)
-}
+#| echo: true
+#| message: false
+#| warning: false
 
 # Standardize dates to the first of each month for all datasets
 datasets <- list(inflation_df, wage_growth_df, us_equity_df, intl_equity_df, bond_df, short_term_df)
-datasets <- lapply(datasets, function(df) {
-  df$date <- as.Date(format(df$date, "%Y-%m-01"))
-  return(df)
-})
+datasets <- datasets |>
+  lapply(\(df) {
+    df$date <- as.Date(format(df$date, "%Y-%m-01"))
+    df
+  })
 
 # Unpack datasets back
 inflation_df <- datasets[[1]]
@@ -326,31 +281,21 @@ bond_df <- datasets[[5]]
 short_term_df <- datasets[[6]]
 
 # Create master date sequence
-start_date <- as.Date("2009-01-01")
-end_date <- as.Date(format(Sys.Date(), "2024-10-01"))
-date_seq <- data.frame(date = seq(from = start_date, to = end_date, by = "month"))
-cat("Expected number of rows (months) over 15 years: ", nrow(date_seq), "\n")
+date_seq <- data.frame(date = seq(from = as.Date("2009-01-01"), 
+                                  to = as.Date(format(Sys.Date(), "2024-10-01")), 
+                                  by = "month"))
 
 # Perform left joins for all datasets
-combined_data <- date_seq %>%
-  left_join(inflation_df, by = "date") %>%
-  left_join(wage_growth_df, by = "date") %>%
-  left_join(us_equity_df, by = "date") %>%
-  left_join(intl_equity_df, by = "date") %>%
-  left_join(bond_df, by = "date") %>%
+combined_data <- date_seq |>
+  left_join(inflation_df, by = "date") |>
+  left_join(wage_growth_df, by = "date") |>
+  left_join(us_equity_df, by = "date") |>
+  left_join(intl_equity_df, by = "date") |>
+  left_join(bond_df, by = "date") |>
   left_join(short_term_df, by = "date")
 
-# Check for missing data
-cat("Total Rows in Combined Dataset: ", nrow(combined_data), "\n")
-missing_summary <- combined_data %>%
-  summarize(across(everything(), ~ sum(is.na(.))))
-cat("Missing Data Summary:\n")
-print(missing_summary)
-
-# Apply bootstrapping for missing values
-cat("Applying bootstrap for missing data...\n")
-
-combined_data <- combined_data %>%
+# Handle missing data
+combined_data <- combined_data |>
   mutate(
     inflation_rate = replace(inflation_rate,
                              is.na(inflation_rate),
@@ -370,22 +315,11 @@ combined_data <- combined_data %>%
     short_term_yield = replace(short_term_yield,
                                is.na(short_term_yield),
                                sample(na.omit(short_term_yield), size = sum(is.na(short_term_yield)), replace = TRUE))
-  )
+  ) |>
+  mutate(across(where(is.numeric), ~ round(., 2)))
 
-
-# Validate the final dataset
-cat("After handling missing values and outliers:\n")
-missing_summary_after <- combined_data %>%
-  summarize(across(everything(), ~ sum(is.na(.))))
-print(missing_summary_after)
-
-# You can now proceed with additional analysis or visualization
-tail(combined_data)
-```
-
-```{r}
-
-tail(combined_data)
+# Display dataset interactively
+DT::datatable(combined_data, options = list(pageLength = 10, scrollX = TRUE))
 ```
 
 ## Initial Analysis
@@ -464,14 +398,13 @@ p3
 
 ```
 
+We can see a clear correlation between some of this plots. For example, the inflation rate and wage growth are highly correlated, as well as the US and International Equity Returns.
+
 ### Correlation matrix
 
 We will calculate the correlation matrix to understand the relationships between the variables. This will help us identify any significant correlations that can inform our analysis and decision-making process.
 
 ```{r}
-# Load the necessary library
-library(ggcorrplot)
-
 # Select only numeric columns
 numeric_data <- combined_data %>%
   select(where(is.numeric))
@@ -491,10 +424,6 @@ ggcorrplot(cor_matrix,
            tl.cex = 12,             # Title label size
            tl.col = "black"         # Title text color
 )
-
-
-
-
 ```
 
 # Key Findings on Economic Factors and Retirement Planning
@@ -550,80 +479,50 @@ In this analysis, we examine the relationships between several key economic fact
 
 -   **Bonds and Short-Term Yields**: Understanding the relationship between bonds and short-term debt yields is crucial for managing fixed-income investments in a rising interest rate environment.
 
-## Historical Comparison of TRS and ORP
+# Historical Comparison of TRS and ORP
 
 ### TRS vs. ORP: Retirement Comparison
 
-In this section, we compare the **Teachers Retirement System (TRS)** and the **Optional Retirement Plan (ORP)** for the first month of retirement, assuming:
+## Initial Setup and Parameters
+- **Initial Salary**: $60,000.
+- **Years of Service**: 15 years.
+- **Salary Growth**: Modeled using year-over-year CPI growth, calculated from the `combined_data` dataset.
 
--   **Career Timeline**: Employee joined CUNY in **January 2009** and retired in **November 2024**.
--   **Starting Salary**: \$50,000 in **2009**, adjusted annually for historical wage growth (using actual wage growth data).
--   **Fixed Plan Parameters**: Contribution rates and retirement benefits remain constant during the employee’s career.
+## TRS (Teacher Retirement System) Benefit Calculation
+1. Calculated annual salaries over the 15-year period by applying CPI growth.
+2. Determined the **Final Average Salary (FAS)** as the average of the last 3 years of salaries.
+3. Computed the **Annual TRS Benefit** based on:
+   - **Years of Service**:
+     - 1.67% of FAS for each year of service up to 20 years.
+     - Special rules applied for exactly 20 years or more than 20 years.
+   - **FAS**: Multiplied by the benefit rate and years of service.
+4. Displayed both the annual and monthly TRS benefits.
 
-### Plan Overviews
+## Contributions (Employee and Employer)
+1. Calculated annual employee and employer contributions based on salary and contribution rules:
+   - **Employee Contributions**:
+     - 3% to 6% of salary, determined by salary brackets.
+   - **Employer Contributions**:
+     - 8% for the first 7 years and 10% for subsequent years.
+2. Summed contributions for each year and totaled them over the 15-year period.
+3. Stored detailed data in a table for yearly contributions.
 
-#### TRS (Teachers Retirement System)
+## ORP (Optional Retirement Plan) Investment Simulation
+1. **Portfolio Allocation**:
+   - Adjusted allocations for US equities, international equities, and bonds based on age brackets:
+     - Ages 50-59: Higher equity allocation.
+     - Ages 60-74: Increased bond allocation.
+2. Calculated annual performance for each asset class using growth rates from the `combined_data` dataset:
+   - US and international equity growth based on stock market performance.
+   - Bond yields calculated as annual averages.
+3. Simulated yearly portfolio performance using contributions and compound growth.
+4. Computed the **Total Accumulated Value** at the end of 15 years.
+5. Estimated the **Annual ORP Benefit** as 4% of the final accumulated value.
 
--   **Defined-Benefit Plan**:
-    -   Retirement income is based on the **Final Average Salary (FAS)** and years of service.
--   **Retirement Benefit Formula**:
-    -   ( \text{Benefit} = \text{FAS} \times \left(\frac{\text{Years of Service}}{2}\right) ), capped at **30 years of service**.
--   **Inflation Adjustment**:
-    -   **Annual increase** of **50% of CPI**, capped between **1% and 3%** annually.
-
-#### ORP (Optional Retirement Plan)
-
--   **Defined-Contribution Plan**:
-    -   Employee and employer contribute to an individual retirement account, invested in a **Fidelity Freedom Fund**.
--   **Contributions**:
-    -   **Employee**: Salary-based contribution (e.g., 3% for salaries ≤\$45,000; 3.5% for \$45,001–\$55,000).
-    -   **Employer**: 8% for the first 7 years, then 10% for subsequent years.
--   **Investment Returns**:
-    -   US equities: **7%**, International equities: **6%**, Bonds: **4%**.
--   **Retirement Strategy**: Withdraw **4%** of accumulated funds annually at retirement.
-
-------------------------------------------------------------------------
-
-### Step-by-Step Analysis
-
-#### 1. **Starting Salary**
-
--   The employee’s starting salary is **\$50,000** in **January 2009** and is retired in **November 2024**. Years served = 15 years.
--   The salary increases **annually** based on historical wage growth data.
-
-#### 2. **TRS Benefit Calculation**
-
--   **Final Average Salary (FAS)**:
-    -   Calculated as the average of the last three years of salary, adjusted for wage growth.
--   **Years of Service**:
-    -   The employee works for **15 years** (from 2009 to 2024), and their pension benefit is calculated based on **15 years of service**.
--   **Monthly Pension**:
-    -   The pension benefit is calculated as ( \text{FAS} \times \left(\frac{15}{2}\right) ) (since the employee works 15 years).
--   **Inflation Adjustment**:
-    -   The pension benefit will be **inflation-adjusted** annually based on the **CPI**. The adjustment will be between **1% and 3%** per year, applied each September after retirement.
-
-#### 3. **ORP Benefit Calculation**
-
--   **Monthly Contributions**:
-    -   The employee and employer contributions are calculated based on the **salary brackets** (e.g., 3% for salaries ≤\$45,000).
-    -   Contributions are made monthly throughout the employee’s **15-year** career.
--   **Investment Growth**:
-    -   The employee’s contributions grow using the average market returns over time:
-        -   US equities: **7%**, International equities: **6%**, Bonds: **4%**.
--   **Retirement Withdrawal**:
-    -   The employee can begin withdrawing funds from their ORP account upon retirement.
-    -   A general rule of thumb is to withdraw **4%** annually from the accumulated balance at retirement.
-
-------------------------------------------------------------------------
-
+---
 The following code snippets will calculate the retirement benefits for both TRS and ORP based on the assumptions outlined above. We will compare the monthly benefits and accumulated funds for each plan to provide a comprehensive analysis of the retirement options.
 
 ```{r}
-# Load necessary libraries
-library(dplyr)
-library(lubridate)
-
-# Assuming combined_data has been preprocessed correctly (with inflation_rate as percentage and correct dates)
 
 # Set initial salary and define years of service
 initial_salary <- 60000
@@ -671,123 +570,281 @@ if (years_of_service <= 20) {
 
 # Display the results
 cat("Annual TRS Benefit: $", round(annual_benefit, 2), "\n")
-cat("Monthly TRS Benefit: $", round(annual_benefit/12), "\n")
+cat("Monthly TRS Benefit: $", round(annual_benefit/12, 2 ), "\n")
 
-print(salaries)
+##make a better table for this
+gt <- 
+
+
 ```
 
 ```{r}
-# Assuming combined_data has been preprocessed correctly (with inflation_rate as percentage and correct dates)
+# Load necessary libraries
+library(dplyr)
+library(lubridate)
 
 # Initialize parameters
 initial_salary <- 60000  # Starting salary
 years_of_service <- 15   # Number of years to simulate
 
-# Set up asset allocation for Age 50 to 59 (First 10 years) and Age 60 to 74 (Next 5 years)
-equity_us_alloc <- 0.47  # US Equities allocation for Age 50 to 59
-equity_international_alloc <- 0.32  # International Equities allocation for Age 50 to 59
-bonds_alloc <- 0.21  # Bonds allocation for Age 50 to 59
-
-equity_us_alloc_older <- 0.34  # US Equities allocation for Age 60 to 74
-equity_international_alloc_older <- 0.23  # International Equities allocation for Age 60 to 74
-bonds_alloc_older <- 0.43  # Bonds allocation for Age 60 to 74
+# Set up salary contribution brackets
+salary_brackets <- c(45000, 55000, 75000, 100000)
 
 # Initialize vectors to store results
 salaries <- numeric(years_of_service)
 employee_contributions <- numeric(years_of_service)
 employer_contributions <- numeric(years_of_service)
-orp_balance <- numeric(years_of_service)
+total_contributions <- numeric(years_of_service)
 
-# Initial salary for the first year
+# Initialize the first year's salary
 salaries[1] <- initial_salary
 
-# Loop through each year and compute monthly contributions and ORP balance
+# Loop through each year and compute the contributions
 for (i in 1:years_of_service) {
   
-  # Get the salary for the year (starting with initial salary for the first year)
+  # Get the salary for the year
   if (i == 1) {
     salary <- initial_salary
   } else {
-    # For subsequent years, use the previous year's salary and adjust based on CPI
-    september_cpi_previous_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2008 + (i - 1))]
-    september_cpi_current_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2008 + i)]
+    # Calculate salary growth based on CPI (only starting from the second year)
+    september_cpi_previous_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2009 + (i - 1))]
+    september_cpi_current_year <- combined_data$inflation_rate[which(month(combined_data$date) == 9 & year(combined_data$date) == 2009 + i)]
     
     # Calculate the salary growth rate based on CPI change (year over year growth)
     cpi_growth <- september_cpi_current_year / september_cpi_previous_year
     salary <- salaries[i - 1] * cpi_growth  # Update salary based on CPI growth
   }
   
-  # Store the salary
+  # Store the salary for each year
   salaries[i] <- salary
   
-  # Calculate monthly salary (divide the annual salary by 12)
-  monthly_salary <- salary / 12
-  
   # Employee contribution calculation based on salary brackets (annual contribution, divided by 12 for monthly)
-  if (salary <= 45000) {
-    employee_contribution <- (salary * 0.03) / 12
-  } else if (salary <= 55000) {
-    employee_contribution <- (salary * 0.035) / 12
-  } else if (salary <= 75000) {
-    employee_contribution <- (salary * 0.045) / 12
-  } else if (salary <= 100000) {
-    employee_contribution <- (salary * 0.0575) / 12
+  if (salary <= salary_brackets[1]) {
+    employee_contribution_annual <- salary * 0.03
+  } else if (salary <= salary_brackets[2]) {
+    employee_contribution_annual <- salary * 0.035
+  } else if (salary <= salary_brackets[3]) {
+    employee_contribution_annual <- salary * 0.045
+  } else if (salary <= salary_brackets[4]) {
+    employee_contribution_annual <- salary * 0.0575
   } else {
-    employee_contribution <- (salary * 0.06) / 12
-  }
-
-  # Employer contribution: 8% for the first 7 years, 10% after (annual contribution, divided by 12 for monthly)
-  if (i <= 7) {
-    employer_contribution <- (salary * 0.08) / 12
-  } else {
-    employer_contribution <- (salary * 0.10) / 12
+    employee_contribution_annual <- salary * 0.06
   }
   
-  # Calculate total contribution (employee + employer)
-  total_contribution <- employee_contribution + employer_contribution
+  # Convert annual contribution to monthly contribution
+  employee_contribution_monthly <- employee_contribution_annual / 12
+  
+  # Employer contribution: 8% for the first 7 years, 10% after (annual contribution)
+  if (i <= 7) {
+    employer_contribution_annual <- salary * 0.08
+  } else {
+    employer_contribution_annual <- salary * 0.10
+  }
+  
+  # Convert annual employer contribution to monthly
+  employer_contribution_monthly <- employer_contribution_annual / 12
+  
+  # Total contribution for the year (monthly contributions summed over 12 months)
+  total_contribution_monthly <- employee_contribution_monthly + employer_contribution_monthly
+  total_contribution_annual <- total_contribution_monthly * 12  # Multiply by 12 to get the annual total contribution
   
   # Store contributions
-  employee_contributions[i] <- employee_contribution
-  employer_contributions[i] <- employer_contribution
-  
-  # Asset allocation: Based on employee's age (years of service)
-  if (i <= 10) {  # First 10 years (Age 50 to 59)
-    # Calculate monthly growth rates for US Equities, International Equities, and Bonds
-    us_equity_growth_rate <- 1 + (combined_data$us_equity_close[i] / combined_data$us_equity_close[i - 1] - 1) * equity_us_alloc
-    intl_equity_growth_rate <- 1 + (combined_data$intl_equity_close[i] / combined_data$intl_equity_close[i - 1] - 1) * equity_international_alloc
-    bond_growth_rate <- 1 + (combined_data$bond_yield[i] / 100) * bonds_alloc
-    
-  } else {  # Age 60 to 74
-    # Calculate monthly growth rates for US Equities, International Equities, and Bonds
-    us_equity_growth_rate <- 1 + (combined_data$us_equity_close[i] / combined_data$us_equity_close[i - 1] - 1) * equity_us_alloc_older
-    intl_equity_growth_rate <- 1 + (combined_data$intl_equity_close[i] / combined_data$intl_equity_close[i - 1] - 1) * equity_international_alloc_older
-    bond_growth_rate <- 1 + (combined_data$bond_yield[i] / 100) * bonds_alloc_older
-  }
-  
-  # Calculate the total growth rate for the year based on asset allocation
-  total_growth_rate <- us_equity_growth_rate + intl_equity_growth_rate + bond_growth_rate
-  
-  # Initialize the ORP balance for the first year
-  if (i == 1) {
-    orp_balance[i] <- total_contribution
-  } else {
-    # Apply compound growth and add monthly contributions
-    orp_balance[i] <- orp_balance[i - 1] * total_growth_rate + total_contribution
-  }
+  employee_contributions[i] <- employee_contribution_annual
+  employer_contributions[i] <- employer_contribution_annual
+  total_contributions[i] <- total_contribution_annual
 }
 
-# Output the data with monthly contributions and ORP balance for each year
-yearly_orp_data <- data.frame(
+# Create the table with the results for each year
+yearly_contributions_data <- data.frame(
   Year = 1:years_of_service,
   Salary = round(salaries, 2),
   Employee_Contribution = round(employee_contributions, 2),
   Employer_Contribution = round(employer_contributions, 2),
-  Total_Contribution = round(employee_contributions + employer_contributions, 2),
-  ORP_Balance = round(orp_balance, 2)
+  Total_Contribution = round(total_contributions, 2)
 )
 
-print(yearly_orp_data)
 ```
+
+```{r}
+# Initialize parameters for ORP calculations
+# Age 50 to 59
+equity_us_alloc_50_59 <- 0.47  # US Equities allocation
+equity_international_alloc_50_59 <- 0.32  # International Equities allocation
+bonds_alloc_50_59 <- 0.21  # Bonds allocation
+
+# Age 60 to 74
+equity_us_alloc_60_74 <- 0.34  # US Equities allocation
+equity_international_alloc_60_74 <- 0.23  # International Equities allocation
+bonds_alloc_60_74 <- 0.43  # Bonds allocation
+
+# Initialize vectors to store results
+performance_us_equity <- numeric(years_of_service)
+performance_international_equity <- numeric(years_of_service)
+performance_bonds <- numeric(years_of_service)
+total_accumulated <- numeric(years_of_service)  # Total accumulated amount
+
+# Starting balance
+total_accumulated[1] <- yearly_contributions_data$Total_Contribution[1]
+
+# Start contributing at age 50 in 2009
+starting_age <- 50
+
+# Loop through each year to compute performance
+for (i in 1:years_of_service) {
+  current_year <- 2009 + i - 1  # Current year
+  next_year <- current_year + 1  # Next year
+  current_age <- starting_age + i - 1  # Current age
+  
+  # Assign allocations based on age
+  if (current_age >= 50 && current_age <= 59) {
+    equity_us_alloc <- equity_us_alloc_50_59
+    equity_international_alloc <- equity_international_alloc_50_59
+    bonds_alloc <- bonds_alloc_50_59
+  } else if (current_age >= 60 && current_age <= 74) {
+    equity_us_alloc <- equity_us_alloc_60_74
+    equity_international_alloc <- equity_international_alloc_60_74
+    bonds_alloc <- bonds_alloc_60_74
+  }
+  
+  # Ensure we have data for the future January, or use November of the current year if not available
+  if (i == years_of_service) {
+    # For the last year, use November data instead of January of the next year
+    us_equity_growth <- combined_data$us_equity_close[which(year(combined_data$date) == current_year & month(combined_data$date) == 11)] /
+                        combined_data$us_equity_close[which(year(combined_data$date) == current_year & month(combined_data$date) == 1)]
+    
+    intl_equity_growth <- combined_data$intl_equity_close[which(year(combined_data$date) == current_year & month(combined_data$date) == 11)] /
+                          combined_data$intl_equity_close[which(year(combined_data$date) == current_year & month(combined_data$date) == 1)]
+    
+    bond_yield_annual <- mean(combined_data$bond_yield[which(year(combined_data$date) == current_year & month(combined_data$date) <= 11)]) / 100 + 1
+  } else {
+    # For all other years, use January of the next year
+    us_equity_growth <- combined_data$us_equity_close[which(year(combined_data$date) == next_year & month(combined_data$date) == 1)] /
+                        combined_data$us_equity_close[which(year(combined_data$date) == current_year & month(combined_data$date) == 1)]
+    
+    intl_equity_growth <- combined_data$intl_equity_close[which(year(combined_data$date) == next_year & month(combined_data$date) == 1)] /
+                          combined_data$intl_equity_close[which(year(combined_data$date) == current_year & month(combined_data$date) == 1)]
+    
+    bond_yield_annual <- mean(combined_data$bond_yield[which(year(combined_data$date) == current_year)]) / 100 + 1
+  }
+
+  # Store individual performance values
+  performance_us_equity[i] <- us_equity_growth
+  performance_international_equity[i] <- intl_equity_growth
+  performance_bonds[i] <- bond_yield_annual  # Already adjusted with +1
+  
+  # Calculate total accumulated with contributions and compound effect
+  if (i == 1) {
+    # First year: Apply performance to the first contribution
+    total_accumulated[i] <- yearly_contributions_data$Total_Contribution[i] * (
+                              (equity_us_alloc * performance_us_equity[i]) +
+                              (equity_international_alloc * performance_international_equity[i]) +
+                              (bonds_alloc * performance_bonds[i])
+                            )
+  } else {
+    # Subsequent years: Include previous accumulated total and current contributions
+    total_accumulated[i] <- (total_accumulated[i - 1] + yearly_contributions_data$Total_Contribution[i]) * (
+                              (equity_us_alloc * performance_us_equity[i]) +
+                              (equity_international_alloc * performance_international_equity[i]) +
+                              (bonds_alloc * performance_bonds[i])
+                            )
+  }
+}
+
+# Create a data frame with the results
+yearly_performance_data <- data.frame(
+  Year = 2009:(2009 + years_of_service - 1),
+  Age = starting_age:(starting_age + years_of_service - 1),
+  US_Equity_Performance = round(performance_us_equity, 4),
+  International_Equity_Performance = round(performance_international_equity, 4),
+  Bonds_Performance = round(performance_bonds, 4),
+  Total_Accumulated = round(total_accumulated, 2)
+)
+
+# Print the performance table
+print(yearly_performance_data)
+
+
+```
+
+```{r}
+# Load necessary library
+library(plotly)
+
+# Calculate total accumulated contributions over time
+total_contributions <- cumsum(yearly_contributions_data$Total_Contribution)
+
+# Create a data frame for plotting
+plot_data <- data.frame(
+  Year = 2009:(2009 + years_of_service - 1),
+  Total_Accumulated = total_accumulated,
+  Total_Contributions = total_contributions
+)
+
+# Create the interactive graph
+plot <- plot_ly(plot_data, x = ~Year) %>%
+  add_trace(y = ~Total_Accumulated, type = 'scatter', mode = 'lines+markers', name = 'Total Accumulated',
+            hovertemplate = 'Year: %{x}<br>Total Accumulated: %{y:.2f}<extra></extra>') %>%
+  add_trace(y = ~Total_Contributions, type = 'scatter', mode = 'lines+markers', name = 'Total Contributions',
+            hovertemplate = 'Year: %{x}<br>Total Contributions: %{y:.2f}<extra></extra>') %>%
+  layout(
+    title = 'Interactive Graph: Total Accumulation vs. Contributions',
+    xaxis = list(title = 'Year'),
+    yaxis = list(title = 'Amount ($)'),
+    legend = list(orientation = 'h', x = 0.5, xanchor = 'center')
+  )
+
+
+annual_benefit_opr = 0.04 * total_accumulated[years_of_service]
+# Print the plot
+# Display the results
+cat("Annual OPR Benefit: $", round(annual_benefit_opr, 2), "\n")
+cat("Monthly OPR Benefit: $", round(annual_benefit_opr/12 , 2), "\n")
+
+plot
+
+
+```
+
+##Comparative Analysis of TRS and ORP
+
+```{r}
+# Calculate monthly benefits
+monthly_benefit_opr <- annual_benefit_opr / 12
+monthly_benefit_trs <- annual_benefit / 12
+
+# Create a data frame for plotting
+benefit_data <- data.frame(
+  Benefit_Type = c("Monthly OPR Benefit", "Monthly TRS Benefit"),
+  Amount = c(monthly_benefit_opr, monthly_benefit_trs)
+)
+
+# Create the bar plot
+benefit_plot <- ggplot(benefit_data, aes(x = Benefit_Type, y = Amount, fill = Benefit_Type)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  geom_text(aes(label = paste0("$", round(Amount, 2))), vjust = -0.5, size = 4) +
+  labs(
+    title = "Comparison of Monthly OPR and TRS Benefits",
+    x = "Benefit Type",
+    y = "Amount ($)"
+  ) +
+  theme_minimal()
+
+# Print the plot
+print(benefit_plot)
+```
+
+The bar chart illustrates a comparison between the **Monthly OPR Benefit** and the **Monthly TRS Benefit**. Key insights from the visualization are as follows:
+
+1.  **Monthly OPR Benefit**:
+    -   The monthly benefit derived from the OPR system is **\$883.35**, as shown by the first bar.
+    -   This represents a smaller portion compared to the TRS benefit, reflecting the structure of OPR benefit allocations.
+2.  **Monthly TRS Benefit**:
+    -   The monthly benefit derived from the TRS system is **\$1769.43**, as shown by the taller second bar.
+    -   This indicates a significantly higher payout, suggesting that the TRS system may provide a more robust financial benefit for retirees compared to the OPR system.
+3.  **Comparison**:
+    -   The TRS benefit is nearly double the OPR benefit, highlighting a substantial disparity between the two systems in terms of monthly payouts.
+
+This comparison provides valuable insight into the financial implications of selecting between the OPR and TRS systems, with the TRS system offering higher monthly benefits. This can serve as a crucial factor for decision-making in retirement planning.
 
 ## Fixed-Rate Analysis
 
@@ -795,13 +852,6 @@ To modify the simulation and project an employee's pension benefit (TRS) or with
 
 Estimated Death Age: We'll assume a reasonable life expectancy for the employee. Cost-of-Living Adjustments (COLA) for TRS: We'll apply annual inflation adjustments to the TRS benefit, which increase by 50% of the CPI each year, capped at 3%. ORP Market Returns: We'll assume long-run average returns for the ORP portfolio, based on historical equity, bond, and international equity returns. Projecting Retirement Income: We will simulate the monthly income over time, considering the employee's longevity and both TRS and ORP scenarios.
 
+I want to expleriment something, lets do just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. THE NEW SALARY. Meaning, you would see the initial salary of 60000, then, the new salary would be in september. To get the new salary you would use wage growth. so YOU WOULD get the september of the first year, I want to expleriment something, lets do just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. to get the new salary, what you would do is use the CPI. So you would see the september cpi fore exapme of the first year and januar, and you would divide september cpi inflation growth and january for the firs one. FOr the second year, you would use september of the first year 2009 and september of the new year of the cpi divided in that way you get the percentage. and you would multiply the salary by that percentage.
 
-
-
-I want to expleriment something, lets do  just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. THE NEW SALARY. Meaning, you would see the initial salary of 60000, then, the new salary would be in september. To get the new salary you would use wage growth. so YOU WOULD get the september of the first year, I want to expleriment something, lets do  just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. to get the new salary, what you would do is use the CPI. So you would see the september cpi fore exapme of the first year and januar, and you would divide september cpi inflation growth and january for the firs one. FOr the second year, you would use september of the first year 2009 and september of the new year of the cpi divided in that way you get the percentage. and you would multiply the salary by that percentage. 
-
-with that you would get the new salary for each year. until retirement. Now we need to use this formaula. 0.0167* FAS * years of service. so we need to get the FAS, TO GET FAS IS THE average salary for the las 3 years. 
-with the last formula you would get the benefits for the program. 
-
-
-
+with that you would get the new salary for each year. until retirement. Now we need to use this formaula. 0.0167\* FAS \* years of service. so we need to get the FAS, TO GET FAS IS THE average salary for the las 3 years. with the last formula you would get the benefits for the program.
