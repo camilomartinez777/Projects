@@ -41,6 +41,9 @@ library(zoo)      # For handling time-series data and filling missing values
 library(DT)
 library(ggcorrplot)
 library(lubridate)
+library(gt)
+library(plotly)
+
 
 ```
 
@@ -85,7 +88,7 @@ Time_Montly =as.Date("2009-01-01")
 
 We already have the links to the resources and the API keys, now we can proceed to fetch the data.
 
--   1.Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
+- 1. Fetching Rate of Inflation (CPI for NYC Metro Area) from FRED
 
 ```{r}
 #| echo: true
@@ -329,6 +332,9 @@ Now that we have a clean dataset, we can perform some initial analysis to unders
 We will visualize the data using line plots and we going to display them in pairs to compare the trends between the variables. so it would be inflation rate and wage growth, US equity and International equity, and Bond Yield and Short-Term Yield.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 # Create plot for Inflation Rate and Wage Growth with corrected labels and separate y-axes
 p1 <- ggplot(combined_data, aes(x = date)) +
   # Inflation Rate
@@ -568,18 +574,36 @@ if (years_of_service <= 20) {
   annual_benefit <- (0.35 + 0.02 * years_of_service) * fas
 }
 
-# Display the results
-cat("Annual TRS Benefit: $", round(annual_benefit, 2), "\n")
-cat("Monthly TRS Benefit: $", round(annual_benefit/12, 2 ), "\n")
+# Prepare the data for the table
+trs_benefit_data <- data.frame(
+  Benefit_Type = c("Annual TRS Benefit", "Monthly TRS Benefit"),
+  Amount = c(round(annual_benefit, 2), round(annual_benefit / 12, 2))
+)
 
+# Create and display the table using gt
+trs_benefit_data |>
+  gt() |>
+  tab_header(
+    title = "TRS Benefit Summary",
+    subtitle = "Annual and Monthly TRS Benefits"
+  ) |>
+  fmt_currency(
+    columns = "Amount",
+    currency = "USD"
+  ) |>
+  cols_label(
+    Benefit_Type = "Benefit Type",
+    Amount = "Amount ($)"
+  ) |>
+  tab_options(
+    table.font.size = "medium",
+    heading.align = "center"
+  )
 
 ```
+We can notice the money a professor would get from the TRS plan. Now we would calculate the contributions for the OPR plan.
 
 ```{r}
-# Load necessary libraries
-library(dplyr)
-library(lubridate)
-
 # Initialize parameters
 initial_salary <- 60000  # Starting salary
 years_of_service <- 15   # Number of years to simulate
@@ -615,7 +639,7 @@ for (i in 1:years_of_service) {
   # Store the salary for each year
   salaries[i] <- salary
   
-  # Employee contribution calculation based on salary brackets (annual contribution, divided by 12 for monthly)
+  # Employee contribution calculation based on salary brackets (annual contribution)
   if (salary <= salary_brackets[1]) {
     employee_contribution_annual <- salary * 0.03
   } else if (salary <= salary_brackets[2]) {
@@ -628,9 +652,6 @@ for (i in 1:years_of_service) {
     employee_contribution_annual <- salary * 0.06
   }
   
-  # Convert annual contribution to monthly contribution
-  employee_contribution_monthly <- employee_contribution_annual / 12
-  
   # Employer contribution: 8% for the first 7 years, 10% after (annual contribution)
   if (i <= 7) {
     employer_contribution_annual <- salary * 0.08
@@ -638,12 +659,8 @@ for (i in 1:years_of_service) {
     employer_contribution_annual <- salary * 0.10
   }
   
-  # Convert annual employer contribution to monthly
-  employer_contribution_monthly <- employer_contribution_annual / 12
-  
-  # Total contribution for the year (monthly contributions summed over 12 months)
-  total_contribution_monthly <- employee_contribution_monthly + employer_contribution_monthly
-  total_contribution_annual <- total_contribution_monthly * 12  # Multiply by 12 to get the annual total contribution
+  # Total contribution for the year
+  total_contribution_annual <- employee_contribution_annual + employer_contribution_annual
   
   # Store contributions
   employee_contributions[i] <- employee_contribution_annual
@@ -660,6 +677,25 @@ yearly_contributions_data <- data.frame(
   Total_Contribution = round(total_contributions, 2)
 )
 
+# Calculate cumulative contributions
+yearly_contributions_data$Cumulative_Employee_Contribution <- cumsum(yearly_contributions_data$Employee_Contribution)
+yearly_contributions_data$Cumulative_Employer_Contribution <- cumsum(yearly_contributions_data$Employer_Contribution)
+yearly_contributions_data$Cumulative_Total_Contribution <- cumsum(yearly_contributions_data$Total_Contribution)
+
+# Visualization for cumulative contributions
+library(ggplot2)
+
+ggplot(yearly_contributions_data, aes(x = Year)) +
+  geom_line(aes(y = Cumulative_Employee_Contribution, color = "Cumulative Employee Contribution"), size = 1) +
+  geom_line(aes(y = Cumulative_Employer_Contribution, color = "Cumulative Employer Contribution"), size = 1) +
+  geom_line(aes(y = Cumulative_Total_Contribution, color = "Cumulative Total Contribution"), size = 1) +
+  labs(
+    title = "Cumulative Contributions Over Time",
+    x = "Year of Service",
+    y = "Cumulative Contribution Amount ($)",
+    color = "Legend"
+  ) +
+  theme_minimal()
 ```
 
 ```{r}
@@ -756,17 +792,39 @@ yearly_performance_data <- data.frame(
   Bonds_Performance = round(performance_bonds, 4),
   Total_Accumulated = round(total_accumulated, 2)
 )
+library(gt)
 
-# Print the performance table
-print(yearly_performance_data)
+annual_benefit_opr <- 0.04 * yearly_performance_data$Total_Accumulated[years_of_service]
+monthly_benefit_opr <- annual_benefit_opr / 12
 
+opr_benefit_table <- data.frame(
+  Metric = c("Annual OPR Benefit", "Monthly OPR Benefit"),
+  Amount = c(round(annual_benefit_opr, 2), round(monthly_benefit_opr, 2))
+)
 
+opr_benefit_table %>%
+  gt() %>%
+  tab_header(
+    title = "OPR Benefit Summary",
+    subtitle = paste("Year", years_of_service, "Calculation")
+  ) %>%
+  fmt_currency(
+    columns = "Amount",
+    currency = "USD"
+  ) %>%
+  cols_label(
+    Metric = "Benefit Type",
+    Amount = "Amount ($)"
+  ) %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+    ),
+    locations = cells_column_labels(everything())
+  )
 ```
 
 ```{r}
-# Load necessary library
-library(plotly)
-
 # Calculate total accumulated contributions over time
 total_contributions <- cumsum(yearly_contributions_data$Total_Contribution)
 
@@ -779,7 +837,7 @@ plot_data <- data.frame(
 
 # Create the interactive graph
 plot <- plot_ly(plot_data, x = ~Year) %>%
-  add_trace(y = ~Total_Accumulated, type = 'scatter', mode = 'lines+markers', name = 'Total Accumulated',
+  add_trace(y = ~Total_Accumulated, type = 'scatter', mode = 'lines+markers', name = 'Compounding $',
             hovertemplate = 'Year: %{x}<br>Total Accumulated: %{y:.2f}<extra></extra>') %>%
   add_trace(y = ~Total_Contributions, type = 'scatter', mode = 'lines+markers', name = 'Total Contributions',
             hovertemplate = 'Year: %{x}<br>Total Contributions: %{y:.2f}<extra></extra>') %>%
@@ -790,17 +848,12 @@ plot <- plot_ly(plot_data, x = ~Year) %>%
     legend = list(orientation = 'h', x = 0.5, xanchor = 'center')
   )
 
-
-annual_benefit_opr = 0.04 * total_accumulated[years_of_service]
-# Print the plot
-# Display the results
-cat("Annual OPR Benefit: $", round(annual_benefit_opr, 2), "\n")
-cat("Monthly OPR Benefit: $", round(annual_benefit_opr/12 , 2), "\n")
-
 plot
 
 
 ```
+In this image we can see clearly the power of compounding. The total accumulated amount grows over time due to the contributions and the compound effect of the investment returns. This visualization provides a clear representation of how the retirement savings can grow over the years, highlighting the importance of consistent contributions and wise investment choices.
+
 
 ##Comparative Analysis of TRS and ORP
 
@@ -842,6 +895,8 @@ The bar chart illustrates a comparison between the **Monthly OPR Benefit** and t
     -   The TRS benefit is nearly double the OPR benefit, highlighting a substantial disparity between the two systems in terms of monthly payouts.
 
 This comparison provides valuable insight into the financial implications of selecting between the OPR and TRS systems, with the TRS system offering higher monthly benefits. This can serve as a crucial factor for decision-making in retirement planning.
+
+
 
 ## Fixed-Rate Analysis
 
