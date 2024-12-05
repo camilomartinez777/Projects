@@ -446,7 +446,7 @@ x$date)), : NAs introduced by coercion</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>        date intl_equity_close
-1 2024-12-01           50.5600
+1 2024-12-01           50.5700
 2 2024-11-01           50.3000
 3 2024-10-01           50.1000
 4 2024-09-01           52.8100
@@ -487,7 +487,7 @@ NAs introduced by coercion</code></pre>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Total Rows in Bond Yield Data: "</span>, <span class="fu">nrow</span>(bond_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>Total Rows in Bond Yield Data:  16415 </code></pre>
+<pre><code>Total Rows in Bond Yield Data:  16416 </code></pre>
 </div>
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -528,18 +528,23 @@ NAs introduced by coercion</code></pre>
 <details class="code-fold">
 <summary>Show the code</summary>
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview the Data</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">tail</span>(bond_df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">tail</span>(bond_df,<span class="dv">100</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 2
-  date       bond_yield
-  &lt;date&gt;          &lt;dbl&gt;
-1 2024-07-01       4.25
-2 2024-08-01       3.87
-3 2024-09-01       3.72
-4 2024-10-01       4.10
-5 2024-11-01       4.36
-6 2024-12-01       4.19</code></pre>
+<pre><code># A tibble: 100 × 2
+   date       bond_yield
+   &lt;date&gt;          &lt;dbl&gt;
+ 1 2016-09-01       1.63
+ 2 2016-10-01       1.76
+ 3 2016-11-01       2.14
+ 4 2016-12-01       2.49
+ 5 2017-01-01       2.43
+ 6 2017-02-01       2.42
+ 7 2017-03-01       2.48
+ 8 2017-04-01       2.30
+ 9 2017-05-01       2.30
+10 2017-06-01       2.19
+# ℹ 90 more rows</code></pre>
 </div>
 </div>
 <ol start="6" type="1">
@@ -713,31 +718,9 @@ x$date), : NAs introduced by coercion</code></pre>
 <span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">sample</span>(<span class="fu">na.omit</span>(short_term_yield), <span class="at">size =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(short_term_yield)), <span class="at">replace =</span> <span class="cn">TRUE</span>))</span>
 <span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb59-22"><a href="#cb59-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Handle outliers by capping them</span></span>
-<span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a>combined_data <span class="ot">&lt;-</span> combined_data <span class="sc">%&gt;%</span></span>
-<span id="cb59-25"><a href="#cb59-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb59-26"><a href="#cb59-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">inflation_rate =</span> <span class="fu">cap_outlier</span>(inflation_rate, </span>
-<span id="cb59-27"><a href="#cb59-27" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">lower_bound =</span> <span class="fu">quantile</span>(inflation_rate, <span class="fl">0.01</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb59-28"><a href="#cb59-28" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">upper_bound =</span> <span class="fu">quantile</span>(inflation_rate, <span class="fl">0.99</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb59-29"><a href="#cb59-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">wage_growth =</span> <span class="fu">cap_outlier</span>(wage_growth, </span>
-<span id="cb59-30"><a href="#cb59-30" aria-hidden="true" tabindex="-1"></a>                              <span class="at">lower_bound =</span> <span class="fu">quantile</span>(wage_growth, <span class="fl">0.01</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb59-31"><a href="#cb59-31" aria-hidden="true" tabindex="-1"></a>                              <span class="at">upper_bound =</span> <span class="fu">quantile</span>(wage_growth, <span class="fl">0.99</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb59-32"><a href="#cb59-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">us_equity_close =</span> <span class="fu">cap_outlier</span>(us_equity_close, </span>
-<span id="cb59-33"><a href="#cb59-33" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">lower_bound =</span> <span class="fu">quantile</span>(us_equity_close, <span class="fl">0.01</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb59-34"><a href="#cb59-34" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">upper_bound =</span> <span class="fu">quantile</span>(us_equity_close, <span class="fl">0.99</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb59-35"><a href="#cb59-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">intl_equity_close =</span> <span class="fu">cap_outlier</span>(intl_equity_close, </span>
-<span id="cb59-36"><a href="#cb59-36" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">lower_bound =</span> <span class="fu">quantile</span>(intl_equity_close, <span class="fl">0.01</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb59-37"><a href="#cb59-37" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">upper_bound =</span> <span class="fu">quantile</span>(intl_equity_close, <span class="fl">0.99</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb59-38"><a href="#cb59-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">bond_yield =</span> <span class="fu">cap_outlier</span>(bond_yield, </span>
-<span id="cb59-39"><a href="#cb59-39" aria-hidden="true" tabindex="-1"></a>                             <span class="at">lower_bound =</span> <span class="fu">quantile</span>(bond_yield, <span class="fl">0.01</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb59-40"><a href="#cb59-40" aria-hidden="true" tabindex="-1"></a>                             <span class="at">upper_bound =</span> <span class="fu">quantile</span>(bond_yield, <span class="fl">0.99</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb59-41"><a href="#cb59-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">short_term_yield =</span> <span class="fu">cap_outlier</span>(short_term_yield, </span>
-<span id="cb59-42"><a href="#cb59-42" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">lower_bound =</span> <span class="fu">quantile</span>(short_term_yield, <span class="fl">0.01</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb59-43"><a href="#cb59-43" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">upper_bound =</span> <span class="fu">quantile</span>(short_term_yield, <span class="fl">0.99</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb59-44"><a href="#cb59-44" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb59-45"><a href="#cb59-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-46"><a href="#cb59-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate the final dataset</span></span>
-<span id="cb59-47"><a href="#cb59-47" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"After handling missing values and outliers:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate the final dataset</span></span>
+<span id="cb59-25"><a href="#cb59-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"After handling missing values and outliers:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>After handling missing values and outliers:</code></pre>
@@ -761,12 +744,12 @@ x$date), : NAs introduced by coercion</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>          date inflation_rate wage_growth us_equity_close intl_equity_close
-185 2024-05-01        334.268      29.950        524.0620          50.10910
-186 2024-06-01        333.662      30.070        542.5534          49.28300
-187 2024-07-01        333.174      30.160        549.1232          50.76890
-188 2024-08-01        333.442      30.260        561.9538          50.93125
-189 2024-09-01        334.265      30.271        562.6893          50.93125
-190 2024-10-01        334.268      30.271        562.6893          50.10000
+185 2024-05-01        334.292       29.95        524.0620           50.1091
+186 2024-06-01        333.662       30.07        542.5534           49.2830
+187 2024-07-01        333.174       30.16        549.1232           50.7689
+188 2024-08-01        333.442       30.26        561.9538           52.2448
+189 2024-09-01        334.265       30.36        573.7600           52.8100
+190 2024-10-01        334.558       30.48        568.6400           50.1000
     bond_yield short_term_yield
 185   4.482273             4.86
 186   4.305263             4.74
@@ -783,12 +766,12 @@ x$date), : NAs introduced by coercion</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>          date inflation_rate wage_growth us_equity_close intl_equity_close
-185 2024-05-01        334.268      29.950        524.0620          50.10910
-186 2024-06-01        333.662      30.070        542.5534          49.28300
-187 2024-07-01        333.174      30.160        549.1232          50.76890
-188 2024-08-01        333.442      30.260        561.9538          50.93125
-189 2024-09-01        334.265      30.271        562.6893          50.93125
-190 2024-10-01        334.268      30.271        562.6893          50.10000
+185 2024-05-01        334.292       29.95        524.0620           50.1091
+186 2024-06-01        333.662       30.07        542.5534           49.2830
+187 2024-07-01        333.174       30.16        549.1232           50.7689
+188 2024-08-01        333.442       30.26        561.9538           52.2448
+189 2024-09-01        334.265       30.36        573.7600           52.8100
+190 2024-10-01        334.558       30.48        568.6400           50.1000
     bond_yield short_term_yield
 185   4.482273             4.86
 186   4.305263             4.74
@@ -1083,7 +1066,7 @@ Adding another scale for y, which will replace the existing scale.</code></pre>
 <section id="starting-salary" class="level4">
 <h4 class="anchored" data-anchor-id="starting-salary">1. <strong>Starting Salary</strong></h4>
 <ul>
-<li>The employee’s starting salary is <strong>$50,000</strong> in <strong>January 2009</strong>.</li>
+<li>The employee’s starting salary is <strong>$50,000</strong> in <strong>January 2009</strong> and is retired in <strong>November 2024</strong>. Years served = 15 years.</li>
 <li>The salary increases <strong>annually</strong> based on historical wage growth data.</li>
 </ul>
 </section>
@@ -1134,500 +1117,236 @@ Adding another scale for y, which will replace the existing scale.</code></pre>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming the dataset 'combined_data' already exists</span></span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate percentage growth for inflation_rate</span></span>
-<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>combined_data<span class="sc">$</span>inflation_rate_growth <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="fu">diff</span>(combined_data<span class="sc">$</span>inflation_rate) <span class="sc">/</span> <span class="fu">head</span>(combined_data<span class="sc">$</span>inflation_rate, <span class="sc">-</span><span class="dv">1</span>))</span>
-<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate percentage growth for wage_growth</span></span>
-<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>combined_data<span class="sc">$</span>wage_growth_growth <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="fu">diff</span>(combined_data<span class="sc">$</span>wage_growth) <span class="sc">/</span> <span class="fu">head</span>(combined_data<span class="sc">$</span>wage_growth, <span class="sc">-</span><span class="dv">1</span>))</span>
-<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate percentage growth for us_equity_close</span></span>
-<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a>combined_data<span class="sc">$</span>us_equity_growth <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="fu">diff</span>(combined_data<span class="sc">$</span>us_equity_close) <span class="sc">/</span> <span class="fu">head</span>(combined_data<span class="sc">$</span>us_equity_close, <span class="sc">-</span><span class="dv">1</span>))</span>
-<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate percentage growth for intl_equity_close</span></span>
-<span id="cb77-12"><a href="#cb77-12" aria-hidden="true" tabindex="-1"></a>combined_data<span class="sc">$</span>intl_equity_growth <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="fu">diff</span>(combined_data<span class="sc">$</span>intl_equity_close) <span class="sc">/</span> <span class="fu">head</span>(combined_data<span class="sc">$</span>intl_equity_close, <span class="sc">-</span><span class="dv">1</span>))</span>
-<span id="cb77-13"><a href="#cb77-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-14"><a href="#cb77-14" aria-hidden="true" tabindex="-1"></a><span class="co"># For bond_yield and short_term_yield, just divide by 100 to convert to decimals</span></span>
-<span id="cb77-15"><a href="#cb77-15" aria-hidden="true" tabindex="-1"></a>combined_data<span class="sc">$</span>bond_yield <span class="ot">&lt;-</span> combined_data<span class="sc">$</span>bond_yield <span class="sc">/</span> <span class="dv">100</span></span>
-<span id="cb77-16"><a href="#cb77-16" aria-hidden="true" tabindex="-1"></a>combined_data<span class="sc">$</span>short_term_yield <span class="ot">&lt;-</span> combined_data<span class="sc">$</span>short_term_yield <span class="sc">/</span> <span class="dv">100</span></span>
-<span id="cb77-17"><a href="#cb77-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-18"><a href="#cb77-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a new dataset with only the percentage growth columns</span></span>
-<span id="cb77-19"><a href="#cb77-19" aria-hidden="true" tabindex="-1"></a>percentages <span class="ot">&lt;-</span> combined_data[, <span class="fu">c</span>(<span class="st">'date'</span>, <span class="st">'inflation_rate_growth'</span>, <span class="st">'wage_growth_growth'</span>, </span>
-<span id="cb77-20"><a href="#cb77-20" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">'us_equity_growth'</span>, <span class="st">'intl_equity_growth'</span>, </span>
-<span id="cb77-21"><a href="#cb77-21" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">'bond_yield'</span>, <span class="st">'short_term_yield'</span>)]</span>
-<span id="cb77-22"><a href="#cb77-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-23"><a href="#cb77-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop the first month (first row)</span></span>
-<span id="cb77-24"><a href="#cb77-24" aria-hidden="true" tabindex="-1"></a>percentages <span class="ot">&lt;-</span> percentages[<span class="sc">-</span><span class="dv">1</span>, ]</span>
-<span id="cb77-25"><a href="#cb77-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb77-26"><a href="#cb77-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the results</span></span>
-<span id="cb77-27"><a href="#cb77-27" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(percentages)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load necessary libraries</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'lubridate'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union</code></pre>
+</div>
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming combined_data has been preprocessed correctly (with inflation_rate as percentage and correct dates)</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Set initial salary and define years of service</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>initial_salary <span class="ot">&lt;-</span> <span class="dv">60000</span></span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>years_of_service <span class="ot">&lt;-</span> <span class="dv">15</span>  <span class="co"># Adjusted to 15 years</span></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize a vector to store salaries for each year</span></span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a>salaries <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb80-9"><a href="#cb80-9" aria-hidden="true" tabindex="-1"></a>salary_growth <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb80-10"><a href="#cb80-10" aria-hidden="true" tabindex="-1"></a>cpi_growth <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb80-11"><a href="#cb80-11" aria-hidden="true" tabindex="-1"></a>salary_increase <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb80-12"><a href="#cb80-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-13"><a href="#cb80-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the first salary as the initial salary</span></span>
+<span id="cb80-14"><a href="#cb80-14" aria-hidden="true" tabindex="-1"></a>salaries[<span class="dv">1</span>] <span class="ot">&lt;-</span> initial_salary</span>
+<span id="cb80-15"><a href="#cb80-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-16"><a href="#cb80-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop through the combined data for yearly salary growth calculation</span></span>
+<span id="cb80-17"><a href="#cb80-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>years_of_service) {</span>
+<span id="cb80-18"><a href="#cb80-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We need CPI data for each September to calculate the salary for the next year</span></span>
+<span id="cb80-19"><a href="#cb80-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the CPI growth between September (from the previous year) and September of the current year</span></span>
+<span id="cb80-20"><a href="#cb80-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb80-21"><a href="#cb80-21" aria-hidden="true" tabindex="-1"></a>  september_cpi_previous_year <span class="ot">&lt;-</span> combined_data<span class="sc">$</span>inflation_rate[<span class="fu">which</span>(<span class="fu">month</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">9</span> <span class="sc">&amp;</span> <span class="fu">year</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">2008</span> <span class="sc">+</span> (i <span class="sc">-</span> <span class="dv">1</span>))]</span>
+<span id="cb80-22"><a href="#cb80-22" aria-hidden="true" tabindex="-1"></a>  september_cpi_current_year <span class="ot">&lt;-</span> combined_data<span class="sc">$</span>inflation_rate[<span class="fu">which</span>(<span class="fu">month</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">9</span> <span class="sc">&amp;</span> <span class="fu">year</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">2008</span> <span class="sc">+</span> i)]</span>
+<span id="cb80-23"><a href="#cb80-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb80-24"><a href="#cb80-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the salary growth rate based on CPI change</span></span>
+<span id="cb80-25"><a href="#cb80-25" aria-hidden="true" tabindex="-1"></a>  cpi_growth[i] <span class="ot">&lt;-</span> september_cpi_current_year <span class="sc">/</span> september_cpi_previous_year</span>
+<span id="cb80-26"><a href="#cb80-26" aria-hidden="true" tabindex="-1"></a>  salary_growth[i] <span class="ot">&lt;-</span> cpi_growth[i]</span>
+<span id="cb80-27"><a href="#cb80-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb80-28"><a href="#cb80-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the increase in salary</span></span>
+<span id="cb80-29"><a href="#cb80-29" aria-hidden="true" tabindex="-1"></a>  salary_increase[i] <span class="ot">&lt;-</span> salaries[i<span class="dv">-1</span>] <span class="sc">*</span> (cpi_growth[i] <span class="sc">-</span> <span class="dv">1</span>)  <span class="co"># Difference from the previous salary</span></span>
+<span id="cb80-30"><a href="#cb80-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb80-31"><a href="#cb80-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Apply the salary growth to the previous year's salary</span></span>
+<span id="cb80-32"><a href="#cb80-32" aria-hidden="true" tabindex="-1"></a>  salaries[i] <span class="ot">&lt;-</span> salaries[i<span class="dv">-1</span>] <span class="sc">*</span> cpi_growth[i]  </span>
+<span id="cb80-33"><a href="#cb80-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb80-34"><a href="#cb80-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-35"><a href="#cb80-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate Final Average Salary (FAS) - which is the average of the last 3 years' salary</span></span>
+<span id="cb80-36"><a href="#cb80-36" aria-hidden="true" tabindex="-1"></a>fas <span class="ot">&lt;-</span> <span class="fu">mean</span>(salaries[(years_of_service<span class="dv">-2</span>)<span class="sc">:</span>years_of_service])</span>
+<span id="cb80-37"><a href="#cb80-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-38"><a href="#cb80-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the Annual Retirement Benefit based on years of service</span></span>
+<span id="cb80-39"><a href="#cb80-39" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (years_of_service <span class="sc">&lt;=</span> <span class="dv">20</span>) {</span>
+<span id="cb80-40"><a href="#cb80-40" aria-hidden="true" tabindex="-1"></a>  annual_benefit <span class="ot">&lt;-</span> <span class="fl">0.0167</span> <span class="sc">*</span> fas <span class="sc">*</span> years_of_service</span>
+<span id="cb80-41"><a href="#cb80-41" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> <span class="cf">if</span> (years_of_service <span class="sc">==</span> <span class="dv">20</span>) {</span>
+<span id="cb80-42"><a href="#cb80-42" aria-hidden="true" tabindex="-1"></a>  annual_benefit <span class="ot">&lt;-</span> <span class="fl">0.0175</span> <span class="sc">*</span> fas <span class="sc">*</span> years_of_service</span>
+<span id="cb80-43"><a href="#cb80-43" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb80-44"><a href="#cb80-44" aria-hidden="true" tabindex="-1"></a>  annual_benefit <span class="ot">&lt;-</span> (<span class="fl">0.35</span> <span class="sc">+</span> <span class="fl">0.02</span> <span class="sc">*</span> years_of_service) <span class="sc">*</span> fas</span>
+<span id="cb80-45"><a href="#cb80-45" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb80-46"><a href="#cb80-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-47"><a href="#cb80-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the results</span></span>
+<span id="cb80-48"><a href="#cb80-48" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Annual TRS Benefit: $"</span>, <span class="fu">round</span>(annual_benefit, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>          date inflation_rate_growth wage_growth_growth us_equity_growth
-2   2009-02-01          0.000000e+00       0.0000000000    -3.622939e-03
-3   2009-03-01          1.326105e-04       0.0003568841     0.000000e+00
-4   2009-04-01          2.544201e-03       0.0010810811     6.700512e-02
-5   2009-05-01          3.015006e-03       0.0005399568     5.845355e-02
-6   2009-06-01          5.938682e-03       0.0016189962    -6.737271e-04
-7   2009-07-01         -1.732882e-03       0.0016163793     7.460603e-02
-8   2009-08-01          1.822456e-03       0.0043033889     3.693857e-02
-9   2009-09-01          1.864620e-03       0.0016068559     3.545818e-02
-10  2009-10-01          6.945264e-04       0.0021390374    -1.922586e-02
-11  2009-11-01         -3.261555e-03       0.0032017076     6.160715e-02
-12  2009-12-01         -1.916005e-03       0.0021276596     1.907201e-02
-13  2010-01-01          3.109796e-03       0.0021231423    -3.634293e-02
-14  2010-02-01          8.636795e-04       0.0015889831     3.119505e-02
-15  2010-03-01          2.861308e-03       0.0000000000     6.090499e-02
-16  2010-04-01          1.779819e-03       0.0026441036     1.547038e-02
-17  2010-05-01          9.719623e-04       0.0026371308    -7.945481e-02
-18  2010-06-01         -1.219419e-03       0.0010520779    -5.174291e-02
-19  2010-07-01          8.320258e-04       0.0005254861     6.830035e-02
-20  2010-08-01          8.674790e-04       0.0036764706    -4.498046e-02
-21  2010-09-01         -6.274743e-04       0.0000000000     8.955377e-02
-22  2010-10-01          1.463520e-03       0.0047095761     3.820246e-02
-23  2010-11-01         -1.668862e-04       0.0005208333     0.000000e+00
-24  2010-12-01          1.849588e-03       0.0005205622     6.684401e-02
-25  2011-01-01          4.809056e-03       0.0057232050     2.329955e-02
-26  2011-02-01          5.745040e-03      -0.0010346611     3.473746e-02
-27  2011-03-01          9.477300e-03       0.0000000000     1.074389e-04
-28  2011-04-01          5.645354e-03       0.0025893320     2.896088e-02
-29  2011-05-01          2.980201e-03       0.0025826446    -1.121447e-02
-30  2011-06-01         -1.929843e-03       0.0000000000    -1.688645e-02
-31  2011-07-01         -1.183821e-03       0.0030911901    -2.000474e-02
-32  2011-08-01          1.830513e-03       0.0000000000    -5.497566e-02
-33  2011-09-01          4.053071e-03       0.0010272214    -6.945000e-02
-34  2011-10-01          2.094725e-04       0.0035915854     1.091476e-01
-35  2011-11-01         -1.849953e-03       0.0000000000    -4.063205e-03
-36  2011-12-01         -2.858754e-03       0.0005112474     1.043932e-02
-37  2012-01-01          3.783146e-03       0.0010219724     4.637443e-02
-38  2012-02-01          4.432702e-03       0.0000000000     4.340591e-02
-39  2012-03-01          8.887150e-03       0.0025523226     3.215672e-02
-40  2012-04-01          2.249622e-03       0.0020366599    -6.675855e-03
-41  2012-05-01          2.115574e-03      -0.0005081301    -6.005606e-02
-42  2012-06-01         -1.510386e-03       0.0020335536     4.052887e-02
-43  2012-07-01         -3.472267e-03       0.0015220700     1.182942e-02
-44  2012-08-01          4.778066e-03       0.0000000000     2.505305e-02
-45  2012-09-01          4.643757e-03       0.0025329281     2.535671e-02
-46  2012-10-01          3.772166e-03       0.0000000000    -1.819820e-02
-47  2012-11-01         -7.490445e-03       0.0030318343     5.659034e-03
-48  2012-12-01         -5.047040e-03       0.0030226700     8.998603e-03
-49  2013-01-01          3.146158e-03       0.0015067805     5.119033e-02
-50  2013-02-01          7.887987e-03       0.0025075226     1.275907e-02
-51  2013-03-01          3.904602e-03       0.0005002501     3.797501e-02
-52  2013-04-01         -9.765998e-05       0.0020000000     1.921221e-02
-53  2013-05-01          2.085032e-03       0.0004990020     2.361012e-02
-54  2013-06-01          1.050941e-03       0.0034912718    -1.336030e-02
-55  2013-07-01          4.825867e-04       0.0009940358     5.167636e-02
-56  2013-08-01          1.057794e-03       0.0019860973    -2.999192e-02
-57  2013-09-01          2.345820e-03       0.0024777007     3.168081e-02
-58  2013-10-01         -6.156545e-04       0.0009886307     4.630679e-02
-59  2013-11-01         -3.573840e-03       0.0029629630     2.963831e-02
-60  2013-12-01         -2.413689e-04       0.0019694732     2.589575e-02
-61  2014-01-01          2.587930e-03       0.0019656020    -3.524821e-02
-62  2014-02-01          3.831741e-03       0.0058852379     4.551566e-02
-63  2014-03-01          6.220172e-03      -0.0004875670     8.310573e-03
-64  2014-04-01          2.994663e-03       0.0004878049     6.951211e-03
-65  2014-05-01          6.430144e-03       0.0014627011     2.320638e-02
-66  2014-06-01          1.102134e-03       0.0024342746     2.063342e-02
-67  2014-07-01          9.684789e-04       0.0009713453    -1.343749e-02
-68  2014-08-01         -7.856109e-04       0.0024260068     3.946383e-02
-69  2014-09-01          1.075892e-03       0.0004840271    -1.379126e-02
-70  2014-10-01         -1.116071e-03       0.0014513788     2.355067e-02
-71  2014-11-01         -5.917649e-03       0.0033816425     2.747214e-02
-72  2014-12-01         -4.683207e-03      -0.0028887819    -2.560075e-03
-73  2015-01-01         -3.249754e-03       0.0043457267    -2.962936e-02
-74  2015-02-01          6.000386e-03       0.0019230769     5.620436e-02
-75  2015-03-01          8.100172e-03       0.0033589251    -1.574480e-02
-76  2015-04-01          2.532169e-03       0.0004782401     9.834278e-03
-77  2015-05-01          7.944631e-03       0.0028680688     1.285576e-02
-78  2015-06-01          4.299279e-04       0.0009532888    -2.009986e-02
-79  2015-07-01          2.897697e-03       0.0014285714     2.214741e-02
-80  2015-08-01         -1.236533e-03       0.0033285782    -6.134457e-02
-81  2015-09-01         -1.961289e-03      -0.0004739336    -2.498985e-02
-82  2015-10-01          3.439001e-04       0.0047415837     8.528627e-02
-83  2015-11-01         -2.422843e-03       0.0009438414     3.654735e-03
-84  2015-12-01         -1.292313e-03       0.0009429514    -1.717930e-02
-85  2016-01-01          4.789799e-03       0.0037682525    -4.978633e-02
-86  2016-02-01          9.035159e-04       0.0009385265    -8.261942e-04
-87  2016-03-01          2.381332e-03       0.0028129395     6.724268e-02
-88  2016-04-01          4.828772e-03       0.0032725573     3.941464e-03
-89  2016-05-01          5.134049e-03       0.0004659832     1.701131e-02
-90  2016-06-01          1.504912e-03       0.0023288309     3.497450e-03
-91  2016-07-01          5.921975e-04       0.0027881041     3.647104e-02
-92  2016-08-01          4.952189e-04       0.0009267841     1.197755e-03
-93  2016-09-01          2.961794e-03       0.0013888889     7.784834e-05
-94  2016-10-01          2.660151e-03       0.0036985668    -1.733712e-02
-95  2016-11-01         -1.796740e-03       0.0000000000     3.683851e-02
-96  2016-12-01          2.726019e-04       0.0023030861     2.028320e-02
-97  2017-01-01          5.202071e-03       0.0022977941     1.789483e-02
-98  2017-02-01          5.733332e-03       0.0013755158     3.929117e-02
-99  2017-03-01          2.763110e-03       0.0018315018     1.258233e-03
-100 2017-04-01          3.388035e-03       0.0027422303     9.926250e-03
-101 2017-05-01          2.261570e-03       0.0009115770     1.411303e-02
-102 2017-06-01          3.498703e-04       0.0027322404     6.373931e-03
-103 2017-07-01          9.392107e-04       0.0027247956     2.055445e-02
-104 2017-08-01          2.253561e-03       0.0013586957     2.917835e-03
-105 2017-09-01          4.786863e-03       0.0031659882     2.014068e-02
-106 2017-10-01          2.803075e-03       0.0000000000     2.356420e-02
-107 2017-11-01         -3.771047e-04       0.0018034265     3.056581e-02
-108 2017-12-01          8.595008e-04       0.0036003600     1.208662e-02
-109 2018-01-01          5.016573e-03       0.0035874439     5.635903e-02
-110 2018-02-01          5.211918e-03       0.0017873101    -3.636019e-02
-111 2018-03-01          3.877132e-03       0.0035682426    -2.741576e-02
-112 2018-04-01          3.996260e-03       0.0017777778     5.168510e-03
-113 2018-05-01          4.590955e-03       0.0022182786     2.430905e-02
-114 2018-06-01          1.869017e-03       0.0030987162     5.754926e-03
-115 2018-07-01          9.062230e-04       0.0017652251     3.704661e-02
-116 2018-08-01          1.606237e-03       0.0035242291     3.192012e-02
-117 2018-09-01          2.685376e-03       0.0030728709     5.948180e-03
-118 2018-10-01          4.111578e-03       0.0021881838    -6.910418e-02
-119 2018-11-01         -2.017318e-03       0.0043668122     1.854904e-02
-120 2018-12-01         -1.690143e-03       0.0047826087    -8.793628e-02
-121 2019-01-01          1.564804e-03       0.0012981393     8.006564e-02
-122 2019-02-01          2.224950e-03       0.0030250648     3.241594e-02
-123 2019-03-01          4.338599e-03       0.0043084877     1.807872e-02
-124 2019-04-01          8.048771e-03       0.0008580009     4.085267e-02
-125 2019-05-01          5.038550e-03       0.0021431633    -6.377119e-02
-126 2019-06-01          2.842587e-04       0.0038494440     6.959247e-02
-127 2019-07-01          2.657248e-04       0.0034086067     1.511945e-02
-128 2019-08-01          8.670659e-04       0.0029723992    -1.674358e-02
-129 2019-09-01          3.089241e-03       0.0025402202     1.947915e-02
-130 2019-10-01          5.225981e-03       0.0029560811     2.210466e-02
-131 2019-11-01         -1.447771e-03       0.0037894737     3.619830e-02
-132 2019-12-01         -1.991740e-03      -0.0004194631     2.903357e-02
-133 2020-01-01          2.773457e-03       0.0033571129    -4.040608e-04
-134 2020-02-01          3.921856e-03       0.0041823505    -7.916574e-02
-135 2020-03-01         -1.519613e-03       0.0058309038    -1.246427e-01
-136 2020-04-01         -3.948977e-03       0.0409937888     1.269836e-01
-137 2020-05-01          5.459615e-04      -0.0059665871     4.764532e-02
-138 2020-06-01          4.002754e-03      -0.0080032013     1.776075e-02
-139 2020-07-01          5.259798e-03      -0.0040338846     5.889230e-02
-140 2020-08-01          3.069700e-03       0.0052652896     6.979666e-02
-141 2020-09-01         -7.596503e-05      -0.0004029009    -3.739838e-02
-142 2020-10-01          1.642416e-03       0.0016122531    -2.493329e-02
-143 2020-11-01         -3.611725e-06       0.0032193159     1.087768e-01
-144 2020-12-01         -1.018510e-03       0.0092258323     3.706605e-02
-145 2021-01-01          2.331946e-03       0.0003974563    -1.019065e-02
-146 2021-02-01          5.280661e-03       0.0031783870     2.780552e-02
-147 2021-03-01          6.899843e-03       0.0035643564     4.540528e-02
-148 2021-04-01          1.026993e-02       0.0067087609     5.291030e-02
-149 2021-05-01          8.063293e-03       0.0066640533     6.566029e-03
-150 2021-06-01          8.642619e-03       0.0050623053     2.247274e-02
-151 2021-07-01          5.550487e-03       0.0058117009     2.441247e-02
-152 2021-08-01          1.828450e-03       0.0061633282     2.975980e-02
-153 2021-09-01          2.272782e-03       0.0068912711    -4.657523e-02
-154 2021-10-01          8.053516e-03       0.0060836502     7.016348e-02
-155 2021-11-01          5.415870e-03       0.0041572184    -8.034782e-03
-156 2021-12-01          3.783230e-03       0.0071509221     4.628837e-02
-157 2022-01-01          8.790890e-03       0.0052316891    -5.274129e-02
-158 2022-02-01          8.212116e-03       0.0026022305    -2.951712e-02
-159 2022-03-01          1.302971e-02       0.0051909529     3.755569e-02
-160 2022-04-01          6.762116e-03       0.0059018812    -8.776903e-02
-161 2022-05-01          8.139478e-03       0.0044004400     2.257255e-03
-162 2022-06-01          1.243682e-02       0.0051113545    -8.246930e-02
-163 2022-07-01          1.451374e-03       0.0047221213     9.208753e-02
-164 2022-08-01          1.974830e-04       0.0032537961    -4.080203e-02
-165 2022-09-01          3.442533e-03       0.0039639640    -9.241634e-02
-166 2022-10-01          6.997912e-03       0.0050251256     8.127562e-02
-167 2022-11-01         -4.349210e-03       0.0046428571     5.559131e-02
-168 2022-12-01         -4.178286e-03       0.0035549236    -5.757565e-02
-169 2023-01-01          9.148154e-03       0.0028338647     6.288713e-02
-170 2023-02-01          5.206676e-03       0.0038855528    -2.514253e-02
-171 2023-03-01          4.966628e-03       0.0056298381     3.712489e-02
-172 2023-04-01          4.589745e-03       0.0034989503     1.597508e-02
-173 2023-05-01          4.152868e-03       0.0038354254     4.616008e-03
-174 2023-06-01          2.852948e-03       0.0038207711     6.481415e-02
-175 2023-07-01          1.285260e-03       0.0044982699     3.273340e-02
-176 2023-08-01          4.214058e-03       0.0020668274    -1.625211e-02
-177 2023-09-01          3.853063e-03       0.0030938467    -4.739330e-02
-178 2023-10-01          6.626136e-04       0.0037697053    -2.170851e-02
-179 2023-11-01         -4.299559e-03       0.0044383749     9.134376e-02
-180 2023-12-01         -1.124735e-03       0.0030591434     4.566261e-02
-181 2024-01-01          6.507492e-03       0.0044052863     1.592633e-02
-182 2024-02-01          3.920098e-03       0.0020242915     5.218702e-02
-183 2024-03-01          8.693170e-03       0.0030303030     3.272381e-02
-184 2024-04-01          5.562880e-03       0.0013427325    -4.031963e-02
-185 2024-05-01          6.525071e-04       0.0040227958     5.057962e-02
-186 2024-06-01         -1.812827e-03       0.0040066778     3.528476e-02
-187 2024-07-01         -1.462558e-03       0.0029930163     1.210904e-02
-188 2024-08-01          8.043845e-04       0.0033156499     2.336561e-02
-189 2024-09-01          2.468195e-03       0.0003635162     1.308794e-03
-190 2024-10-01          8.885166e-06       0.0000000000     0.000000e+00
-    intl_equity_growth  bond_yield short_term_yield
-2        -0.0027563603 0.028700000         0.009800
-3         0.0000000000 0.028195455         0.009300
-4         0.0932066341 0.029271429         0.009300
-5         0.1305881555 0.032930000         0.009300
-6        -0.0182189106 0.037218182         0.011800
-7         0.1057415577 0.035622727         0.010200
-8         0.0449657820 0.035871429         0.011200
-9         0.0393908649 0.034019048         0.009600
-10       -0.0276972044 0.033876190         0.009500
-11        0.0410806387 0.034026316         0.008000
-12        0.0078699853 0.035900000         0.008700
-13       -0.0543831169 0.037331579         0.009300
-14        0.0074184190 0.036910526         0.008600
-15        0.0629563694 0.037273913         0.009600
-16       -0.0277329966 0.038468182         0.010600
-17       -0.1152707091 0.034200000         0.008300
-18       -0.0181323144 0.032040909         0.007200
-19        0.1166246918 0.030114286         0.006200
-20       -0.0358355373 0.026986364         0.005200
-21        0.0965703704 0.026476190         0.004800
-22        0.0405545600 0.025400000         0.003800
-23       -0.0489958695 0.027630000         0.004500
-24        0.0843783045 0.032909091         0.006200
-25        0.0215750859 0.033940000         0.006100
-26        0.0365564878 0.035763158         0.007700
-27       -0.0250226275 0.034143478         0.007000
-28        0.0619142209 0.034550000         0.007300
-29       -0.0270048444 0.031685714         0.005600
-30       -0.0121940215 0.030022727         0.004100
-31       -0.0238947297 0.030030000         0.004100
-32       -0.0858253138 0.023030435         0.002300
-33       -0.1132985850 0.019752381         0.002100
-34        0.0975759127 0.021520000         0.002800
-35       -0.0208646814 0.020135000         0.002500
-36       -0.0212485695 0.019780952         0.002600
-37        0.0561526420 0.019665000         0.002400
-38        0.0488427579 0.019675000         0.002800
-39        0.0032742955 0.021727273         0.003400
-40       -0.0238028780 0.020528571         0.002900
-41       -0.1116800394 0.018031818         0.002900
-42        0.0698078637 0.016223810         0.002900
-43        0.0025319737 0.015266667         0.002500
-44        0.0328602297 0.016782609         0.002700
-45        0.0263521397 0.017231579         0.002600
-46        0.0106447848 0.017461905         0.002800
-47        0.0270815377 0.016540000         0.002700
-48        0.0423541062 0.017190000         0.002600
-49        0.0383184793 0.019147619         0.002700
-50       -0.0114795473 0.019842105         0.002700
-51        0.0118795494 0.019575000         0.002600
-52        0.0521540280 0.017590909         0.002300
-53       -0.0297390785 0.019281818         0.002500
-54       -0.0276929853 0.023000000         0.003300
-55        0.0519652940 0.025822727         0.003400
-56       -0.0160206680 0.027372727         0.003600
-57        0.0784990531 0.028095000         0.004000
-58        0.0320887039 0.026159091         0.003400
-59        0.0066086237 0.027184211         0.003000
-60        0.0189550163 0.029019048         0.003400
-61       -0.0520636116 0.028580952         0.003900
-62        0.0594788283 0.027094737         0.003300
-63       -0.0036551343 0.027233333         0.004000
-64        0.0157506315 0.027052381         0.004200
-65        0.0176519350 0.025590476         0.003900
-66        0.0104266160 0.025985714         0.004500
-67       -0.0237141529 0.025422727         0.005100
-68        0.0026456568 0.024200000         0.004700
-69       -0.0415534921 0.025342857         0.005700
-70       -0.0035247457 0.023040909         0.004500
-71        0.0000000000 0.023255556         0.005300
-72       -0.0377257679 0.022072727         0.006400
-73        0.0071268674 0.018815000         0.005500
-74        0.0615977808 0.019752632         0.006200
-75       -0.0121582445 0.020427273         0.006400
-76        0.0386638673 0.019350000         0.005400
-77       -0.0004837278 0.021975000         0.006100
-78       -0.0290986129 0.023636364         0.006900
-79        0.0146304910 0.023245455         0.006700
-80       -0.0723351369 0.021671429         0.007000
-81       -0.0408413064 0.021728571         0.007100
-82        0.0673387377 0.020700000         0.006400
-83       -0.0076224996 0.022631579         0.008800
-84       -0.0213757534 0.022427273         0.009800
-85       -0.0552804058 0.020852632         0.009000
-86       -0.0308463805 0.017795000         0.007300
-87        0.0719591601 0.018890909         0.008800
-88        0.0231321906 0.018052381         0.007700
-89       -0.0029965257 0.018061905         0.008200
-90       -0.0204044960 0.016440909         0.007300
-91        0.0415691014 0.015040000         0.006700
-92        0.0040749233 0.015565217         0.007400
-93        0.0164811732 0.016304762         0.007700
-94       -0.0240603895 0.017645000         0.008400
-95       -0.0150639481 0.021420000         0.009800
-96        0.0245096659 0.024919048         0.012000
-97        0.0366734810 0.024325000         0.012100
-98        0.0105591441 0.024189474         0.012000
-99        0.0305724546 0.024817391         0.013100
-100       0.0221393407 0.022973684         0.012400
-101       0.0341039995 0.023036364         0.013000
-102       0.0063826969 0.021868182         0.013400
-103       0.0288002441 0.023180000         0.013700
-104       0.0002355370 0.022091304         0.013400
-105       0.0251529176 0.022020000         0.013800
-106       0.0177382397 0.023600000         0.015500
-107       0.0086016891 0.023533333         0.017000
-108       0.0164986049 0.024025000         0.018400
-109       0.0474803094 0.025838095         0.020300
-110      -0.0510752130 0.028589474         0.021800
-111      -0.0039756430 0.028423810         0.022800
-112       0.0126553437 0.028690476         0.023800
-113      -0.0142809509 0.029777273         0.025100
-114      -0.0166577286 0.029123810         0.025300
-115       0.0228438463 0.028890476         0.026100
-116      -0.0173217108 0.028891304         0.026400
-117       0.0071175962 0.030042105         0.027700
-118      -0.0859734382 0.031522727         0.028600
-119       0.0050569626 0.031170000         0.028600
-120      -0.0566730024 0.028326316         0.026800
-121       0.0746636485 0.027138095         0.025400
-122       0.0233239092 0.026763158         0.025000
-123       0.0060213196 0.025709524         0.024100
-124       0.0283818130 0.025323810         0.023400
-125      -0.0521062469 0.023950000         0.022100
-126       0.0585859900 0.020740000         0.018100
-127      -0.0203803513 0.020590909         0.018400
-128      -0.0188430751 0.016263636         0.015700
-129       0.0315617900 0.016995000         0.016500
-130       0.0321311383 0.017068182         0.015500
-131       0.0134451076 0.018121053         0.016100
-132       0.0356535085 0.018628571         0.016100
-133      -0.0299593626 0.017576190         0.015200
-134      -0.0765107291 0.015042105         0.013300
-135      -0.1514575449 0.008700000         0.004500
-136       0.0701857597 0.006576190         0.002200
-137       0.0557741293 0.006740000         0.001700
-138       0.0349218074 0.007286364         0.001900
-139       0.0262962378 0.006567810         0.001500
-140       0.0517465457 0.006567810         0.001400
-141      -0.0178743700 0.006795238         0.001300
-142      -0.0354529501 0.007871429         0.001500
-143       0.1429678896 0.008700000         0.001700
-144       0.0563980248 0.009336364         0.001400
-145      -0.0072023066 0.010810526         0.001300
-146       0.0243242405 0.012578947         0.001300
-147       0.0276861430 0.016108696         0.001500
-148       0.0305424325 0.016350000         0.001600
-149       0.0357635444 0.016210000         0.001600
-150      -0.0093298361 0.015190909         0.002000
-151       0.0050464990 0.013185714         0.002200
-152       0.0131330842 0.012831818         0.002200
-153      -0.0337850783 0.013747619         0.002400
-154       0.0322840719 0.015825000         0.003900
-155      -0.0464303355 0.015595000         0.005100
-156       0.0433695041 0.014650000         0.006800
-157      -0.0385837764 0.017640000         0.009800
-158      -0.0264811807 0.019342105         0.014400
-159       0.0067595749 0.021278261         0.019100
-160      -0.0678736598 0.027475000         0.025400
-161       0.0165294247 0.028980952         0.026200
-162      -0.0918798951 0.031433333         0.030000
-163       0.0529403453 0.028960000         0.030400
-164      -0.0581936292 0.028978261         0.032500
-165      -0.0986197197 0.035190476         0.038600
-166       0.0607805484 0.039835000         0.043800
-167       0.1254881074 0.038910000         0.045000
-168      -0.0218123685 0.036161905         0.042900
-169       0.0903029483 0.035315000         0.042100
-170      -0.0347470642 0.037468421         0.045300
-171       0.0264208375 0.036630435         0.043000
-172       0.0263440623 0.034600000         0.040200
-173      -0.0373159637 0.035736364         0.041300
-174       0.0444176712 0.037480952         0.046400
-175       0.0313978485 0.038995000         0.048300
-176      -0.0394702131 0.041678261         0.049000
-177      -0.0378259123 0.043790000         0.049132
-178      -0.0338518445 0.045068429         0.049132
-179       0.0880685425 0.045028571         0.048800
-180       0.0558316971 0.040200000         0.044600
-181      -0.0108564202 0.040580952         0.043200
-182       0.0274389392 0.042075000         0.045400
-183       0.0365792704 0.042085000         0.045900
-184      -0.0340839853 0.045068429         0.048700
-185       0.0466346676 0.044822727         0.048600
-186      -0.0164860275 0.043052632         0.047400
-187       0.0301503561 0.042486364         0.045000
-188       0.0031978042 0.038709091         0.039700
-189       0.0000000000 0.037235000         0.036200
-190      -0.0163210017 0.040954545         0.039700</code></pre>
+<pre><code>Annual TRS Benefit: $ 21233.11 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Monthly TRS Benefit: $"</span>, <span class="fu">round</span>(annual_benefit<span class="sc">/</span><span class="dv">12</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Monthly TRS Benefit: $ 1769 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(salaries)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 60000.00 60296.88 62411.23 63755.62 64589.87 65890.13 66526.64 67882.19
+ [9] 69862.27 72204.87 74110.60 75287.21 79272.15 85820.04 89196.53</code></pre>
 </div>
 </div>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming the percentages data exists and starting salary is $50,000</span></span>
-<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>starting_salary <span class="ot">&lt;-</span> <span class="dv">50000</span></span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>n_months <span class="ot">&lt;-</span> <span class="fu">nrow</span>(percentages)  <span class="co"># Total number of months</span></span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a vector to store the salary for each month</span></span>
-<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>salary <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_months)</span>
-<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>salary[<span class="dv">1</span>] <span class="ot">&lt;-</span> starting_salary</span>
-<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate salary growth over the months based on wage_growth_growth</span></span>
-<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>n_months) {</span>
-<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>  salary[i] <span class="ot">&lt;-</span> salary[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> percentages<span class="sc">$</span>wage_growth_growth[i <span class="sc">-</span> <span class="dv">1</span>])</span>
-<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Employee contribution percentages based on salary brackets</span></span>
-<span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>employee_contribution <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_months)</span>
-<span id="cb79-16"><a href="#cb79-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_months) {</span>
-<span id="cb79-17"><a href="#cb79-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (salary[i] <span class="sc">&lt;=</span> <span class="dv">45000</span>) {</span>
-<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a>    employee_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.03</span></span>
-<span id="cb79-19"><a href="#cb79-19" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (salary[i] <span class="sc">&lt;=</span> <span class="dv">55000</span>) {</span>
-<span id="cb79-20"><a href="#cb79-20" aria-hidden="true" tabindex="-1"></a>    employee_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.035</span></span>
-<span id="cb79-21"><a href="#cb79-21" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (salary[i] <span class="sc">&lt;=</span> <span class="dv">75000</span>) {</span>
-<span id="cb79-22"><a href="#cb79-22" aria-hidden="true" tabindex="-1"></a>    employee_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.045</span></span>
-<span id="cb79-23"><a href="#cb79-23" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (salary[i] <span class="sc">&lt;=</span> <span class="dv">100000</span>) {</span>
-<span id="cb79-24"><a href="#cb79-24" aria-hidden="true" tabindex="-1"></a>    employee_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.0575</span></span>
-<span id="cb79-25"><a href="#cb79-25" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb79-26"><a href="#cb79-26" aria-hidden="true" tabindex="-1"></a>    employee_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.06</span></span>
-<span id="cb79-27"><a href="#cb79-27" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb79-28"><a href="#cb79-28" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb79-29"><a href="#cb79-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-30"><a href="#cb79-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Employer contributions: 8% for the first 7 years, 10% thereafter</span></span>
-<span id="cb79-31"><a href="#cb79-31" aria-hidden="true" tabindex="-1"></a>employer_contribution <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_months)</span>
-<span id="cb79-32"><a href="#cb79-32" aria-hidden="true" tabindex="-1"></a>years_of_service <span class="ot">&lt;-</span> <span class="fu">floor</span>((<span class="dv">1</span><span class="sc">:</span>n_months) <span class="sc">/</span> <span class="dv">12</span>) <span class="sc">+</span> <span class="dv">1</span>  <span class="co"># Convert months to years</span></span>
-<span id="cb79-33"><a href="#cb79-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-34"><a href="#cb79-34" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_months) {</span>
-<span id="cb79-35"><a href="#cb79-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (years_of_service[i] <span class="sc">&lt;=</span> <span class="dv">7</span>) {</span>
-<span id="cb79-36"><a href="#cb79-36" aria-hidden="true" tabindex="-1"></a>    employer_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.08</span></span>
-<span id="cb79-37"><a href="#cb79-37" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb79-38"><a href="#cb79-38" aria-hidden="true" tabindex="-1"></a>    employer_contribution[i] <span class="ot">&lt;-</span> <span class="fl">0.10</span></span>
-<span id="cb79-39"><a href="#cb79-39" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb79-40"><a href="#cb79-40" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb79-41"><a href="#cb79-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-42"><a href="#cb79-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate monthly contributions for ORP (employee + employer)</span></span>
-<span id="cb79-43"><a href="#cb79-43" aria-hidden="true" tabindex="-1"></a>monthly_contribution_orp <span class="ot">&lt;-</span> salary <span class="sc">*</span> (employee_contribution <span class="sc">+</span> employer_contribution)</span>
-<span id="cb79-44"><a href="#cb79-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-45"><a href="#cb79-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate compounded ORP balance</span></span>
-<span id="cb79-46"><a href="#cb79-46" aria-hidden="true" tabindex="-1"></a>orp_balance <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_months)</span>
-<span id="cb79-47"><a href="#cb79-47" aria-hidden="true" tabindex="-1"></a>orp_balance[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">0</span>  <span class="co"># Assume no balance at the start</span></span>
-<span id="cb79-48"><a href="#cb79-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-49"><a href="#cb79-49" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>n_months) {</span>
-<span id="cb79-50"><a href="#cb79-50" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Growth is applied according to equity, international equity, and bond growth</span></span>
-<span id="cb79-51"><a href="#cb79-51" aria-hidden="true" tabindex="-1"></a>  equity_growth <span class="ot">&lt;-</span> percentages<span class="sc">$</span>us_equity_growth[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> <span class="fl">0.47</span> <span class="sc">+</span> percentages<span class="sc">$</span>intl_equity_growth[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> <span class="fl">0.32</span> <span class="sc">+</span> percentages<span class="sc">$</span>bond_yield[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> <span class="fl">0.21</span></span>
-<span id="cb79-52"><a href="#cb79-52" aria-hidden="true" tabindex="-1"></a>  orp_balance[i] <span class="ot">&lt;-</span> orp_balance[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> equity_growth) <span class="sc">+</span> monthly_contribution_orp[i]</span>
-<span id="cb79-53"><a href="#cb79-53" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb79-54"><a href="#cb79-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-55"><a href="#cb79-55" aria-hidden="true" tabindex="-1"></a><span class="co"># Final ORP balance at retirement (end of the last month)</span></span>
-<span id="cb79-56"><a href="#cb79-56" aria-hidden="true" tabindex="-1"></a>final_orp_balance <span class="ot">&lt;-</span> orp_balance[n_months]</span>
-<span id="cb79-57"><a href="#cb79-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-58"><a href="#cb79-58" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate 4% annual withdrawal rate for the first month of retirement</span></span>
-<span id="cb79-59"><a href="#cb79-59" aria-hidden="true" tabindex="-1"></a>orp_monthly_withdrawal <span class="ot">&lt;-</span> final_orp_balance <span class="sc">*</span> <span class="fl">0.04</span> <span class="sc">/</span> <span class="dv">12</span></span>
-<span id="cb79-60"><a href="#cb79-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-61"><a href="#cb79-61" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate TRS pension benefit: Final Average Salary (FAS) based on last 3 years</span></span>
-<span id="cb79-62"><a href="#cb79-62" aria-hidden="true" tabindex="-1"></a>fas <span class="ot">&lt;-</span> <span class="fu">mean</span>(salary[(n_months <span class="sc">-</span> <span class="dv">35</span>)<span class="sc">:</span>n_months])  <span class="co"># Last 36 months (3 years)</span></span>
-<span id="cb79-63"><a href="#cb79-63" aria-hidden="true" tabindex="-1"></a>years_served <span class="ot">&lt;-</span> n_months <span class="sc">/</span> <span class="dv">12</span>  <span class="co"># Years of service</span></span>
-<span id="cb79-64"><a href="#cb79-64" aria-hidden="true" tabindex="-1"></a>trs_benefit <span class="ot">&lt;-</span> fas <span class="sc">*</span> <span class="fl">0.025</span> <span class="sc">*</span> years_served  <span class="co"># Assuming 2.5% per year</span></span>
-<span id="cb79-65"><a href="#cb79-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-66"><a href="#cb79-66" aria-hidden="true" tabindex="-1"></a><span class="co"># Monthly TRS benefit</span></span>
-<span id="cb79-67"><a href="#cb79-67" aria-hidden="true" tabindex="-1"></a>trs_monthly_benefit <span class="ot">&lt;-</span> trs_benefit <span class="sc">/</span> <span class="dv">12</span></span>
-<span id="cb79-68"><a href="#cb79-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb79-69"><a href="#cb79-69" aria-hidden="true" tabindex="-1"></a><span class="co"># Output results</span></span>
-<span id="cb79-70"><a href="#cb79-70" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"TRS Monthly Benefit at Retirement (First Month): $"</span>, <span class="fu">round</span>(trs_monthly_benefit, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming combined_data has been preprocessed correctly (with inflation_rate as percentage and correct dates)</span></span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize parameters</span></span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>initial_salary <span class="ot">&lt;-</span> <span class="dv">60000</span>  <span class="co"># Starting salary</span></span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>years_of_service <span class="ot">&lt;-</span> <span class="dv">15</span>   <span class="co"># Number of years to simulate</span></span>
+<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-7"><a href="#cb86-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up asset allocation for Age 50 to 59 (First 10 years) and Age 60 to 74 (Next 5 years)</span></span>
+<span id="cb86-8"><a href="#cb86-8" aria-hidden="true" tabindex="-1"></a>equity_us_alloc <span class="ot">&lt;-</span> <span class="fl">0.47</span>  <span class="co"># US Equities allocation for Age 50 to 59</span></span>
+<span id="cb86-9"><a href="#cb86-9" aria-hidden="true" tabindex="-1"></a>equity_international_alloc <span class="ot">&lt;-</span> <span class="fl">0.32</span>  <span class="co"># International Equities allocation for Age 50 to 59</span></span>
+<span id="cb86-10"><a href="#cb86-10" aria-hidden="true" tabindex="-1"></a>bonds_alloc <span class="ot">&lt;-</span> <span class="fl">0.21</span>  <span class="co"># Bonds allocation for Age 50 to 59</span></span>
+<span id="cb86-11"><a href="#cb86-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-12"><a href="#cb86-12" aria-hidden="true" tabindex="-1"></a>equity_us_alloc_older <span class="ot">&lt;-</span> <span class="fl">0.34</span>  <span class="co"># US Equities allocation for Age 60 to 74</span></span>
+<span id="cb86-13"><a href="#cb86-13" aria-hidden="true" tabindex="-1"></a>equity_international_alloc_older <span class="ot">&lt;-</span> <span class="fl">0.23</span>  <span class="co"># International Equities allocation for Age 60 to 74</span></span>
+<span id="cb86-14"><a href="#cb86-14" aria-hidden="true" tabindex="-1"></a>bonds_alloc_older <span class="ot">&lt;-</span> <span class="fl">0.43</span>  <span class="co"># Bonds allocation for Age 60 to 74</span></span>
+<span id="cb86-15"><a href="#cb86-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-16"><a href="#cb86-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize vectors to store results</span></span>
+<span id="cb86-17"><a href="#cb86-17" aria-hidden="true" tabindex="-1"></a>salaries <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb86-18"><a href="#cb86-18" aria-hidden="true" tabindex="-1"></a>employee_contributions <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb86-19"><a href="#cb86-19" aria-hidden="true" tabindex="-1"></a>employer_contributions <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb86-20"><a href="#cb86-20" aria-hidden="true" tabindex="-1"></a>orp_balance <span class="ot">&lt;-</span> <span class="fu">numeric</span>(years_of_service)</span>
+<span id="cb86-21"><a href="#cb86-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-22"><a href="#cb86-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial salary for the first year</span></span>
+<span id="cb86-23"><a href="#cb86-23" aria-hidden="true" tabindex="-1"></a>salaries[<span class="dv">1</span>] <span class="ot">&lt;-</span> initial_salary</span>
+<span id="cb86-24"><a href="#cb86-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-25"><a href="#cb86-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop through each year and compute monthly contributions and ORP balance</span></span>
+<span id="cb86-26"><a href="#cb86-26" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>years_of_service) {</span>
+<span id="cb86-27"><a href="#cb86-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-28"><a href="#cb86-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get the salary for the year (starting with initial salary for the first year)</span></span>
+<span id="cb86-29"><a href="#cb86-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (i <span class="sc">==</span> <span class="dv">1</span>) {</span>
+<span id="cb86-30"><a href="#cb86-30" aria-hidden="true" tabindex="-1"></a>    salary <span class="ot">&lt;-</span> initial_salary</span>
+<span id="cb86-31"><a href="#cb86-31" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb86-32"><a href="#cb86-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># For subsequent years, use the previous year's salary and adjust based on CPI</span></span>
+<span id="cb86-33"><a href="#cb86-33" aria-hidden="true" tabindex="-1"></a>    september_cpi_previous_year <span class="ot">&lt;-</span> combined_data<span class="sc">$</span>inflation_rate[<span class="fu">which</span>(<span class="fu">month</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">9</span> <span class="sc">&amp;</span> <span class="fu">year</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">2008</span> <span class="sc">+</span> (i <span class="sc">-</span> <span class="dv">1</span>))]</span>
+<span id="cb86-34"><a href="#cb86-34" aria-hidden="true" tabindex="-1"></a>    september_cpi_current_year <span class="ot">&lt;-</span> combined_data<span class="sc">$</span>inflation_rate[<span class="fu">which</span>(<span class="fu">month</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">9</span> <span class="sc">&amp;</span> <span class="fu">year</span>(combined_data<span class="sc">$</span>date) <span class="sc">==</span> <span class="dv">2008</span> <span class="sc">+</span> i)]</span>
+<span id="cb86-35"><a href="#cb86-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb86-36"><a href="#cb86-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate the salary growth rate based on CPI change (year over year growth)</span></span>
+<span id="cb86-37"><a href="#cb86-37" aria-hidden="true" tabindex="-1"></a>    cpi_growth <span class="ot">&lt;-</span> september_cpi_current_year <span class="sc">/</span> september_cpi_previous_year</span>
+<span id="cb86-38"><a href="#cb86-38" aria-hidden="true" tabindex="-1"></a>    salary <span class="ot">&lt;-</span> salaries[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> cpi_growth  <span class="co"># Update salary based on CPI growth</span></span>
+<span id="cb86-39"><a href="#cb86-39" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb86-40"><a href="#cb86-40" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-41"><a href="#cb86-41" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Store the salary</span></span>
+<span id="cb86-42"><a href="#cb86-42" aria-hidden="true" tabindex="-1"></a>  salaries[i] <span class="ot">&lt;-</span> salary</span>
+<span id="cb86-43"><a href="#cb86-43" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-44"><a href="#cb86-44" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate monthly salary (divide the annual salary by 12)</span></span>
+<span id="cb86-45"><a href="#cb86-45" aria-hidden="true" tabindex="-1"></a>  monthly_salary <span class="ot">&lt;-</span> salary <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-46"><a href="#cb86-46" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-47"><a href="#cb86-47" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Employee contribution calculation based on salary brackets (annual contribution, divided by 12 for monthly)</span></span>
+<span id="cb86-48"><a href="#cb86-48" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (salary <span class="sc">&lt;=</span> <span class="dv">45000</span>) {</span>
+<span id="cb86-49"><a href="#cb86-49" aria-hidden="true" tabindex="-1"></a>    employee_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.03</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-50"><a href="#cb86-50" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (salary <span class="sc">&lt;=</span> <span class="dv">55000</span>) {</span>
+<span id="cb86-51"><a href="#cb86-51" aria-hidden="true" tabindex="-1"></a>    employee_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.035</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-52"><a href="#cb86-52" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (salary <span class="sc">&lt;=</span> <span class="dv">75000</span>) {</span>
+<span id="cb86-53"><a href="#cb86-53" aria-hidden="true" tabindex="-1"></a>    employee_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.045</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-54"><a href="#cb86-54" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (salary <span class="sc">&lt;=</span> <span class="dv">100000</span>) {</span>
+<span id="cb86-55"><a href="#cb86-55" aria-hidden="true" tabindex="-1"></a>    employee_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.0575</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-56"><a href="#cb86-56" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb86-57"><a href="#cb86-57" aria-hidden="true" tabindex="-1"></a>    employee_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.06</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-58"><a href="#cb86-58" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb86-59"><a href="#cb86-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-60"><a href="#cb86-60" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Employer contribution: 8% for the first 7 years, 10% after (annual contribution, divided by 12 for monthly)</span></span>
+<span id="cb86-61"><a href="#cb86-61" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (i <span class="sc">&lt;=</span> <span class="dv">7</span>) {</span>
+<span id="cb86-62"><a href="#cb86-62" aria-hidden="true" tabindex="-1"></a>    employer_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.08</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-63"><a href="#cb86-63" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb86-64"><a href="#cb86-64" aria-hidden="true" tabindex="-1"></a>    employer_contribution <span class="ot">&lt;-</span> (salary <span class="sc">*</span> <span class="fl">0.10</span>) <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb86-65"><a href="#cb86-65" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb86-66"><a href="#cb86-66" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-67"><a href="#cb86-67" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate total contribution (employee + employer)</span></span>
+<span id="cb86-68"><a href="#cb86-68" aria-hidden="true" tabindex="-1"></a>  total_contribution <span class="ot">&lt;-</span> employee_contribution <span class="sc">+</span> employer_contribution</span>
+<span id="cb86-69"><a href="#cb86-69" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-70"><a href="#cb86-70" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Store contributions</span></span>
+<span id="cb86-71"><a href="#cb86-71" aria-hidden="true" tabindex="-1"></a>  employee_contributions[i] <span class="ot">&lt;-</span> employee_contribution</span>
+<span id="cb86-72"><a href="#cb86-72" aria-hidden="true" tabindex="-1"></a>  employer_contributions[i] <span class="ot">&lt;-</span> employer_contribution</span>
+<span id="cb86-73"><a href="#cb86-73" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-74"><a href="#cb86-74" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Asset allocation: Based on employee's age (years of service)</span></span>
+<span id="cb86-75"><a href="#cb86-75" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (i <span class="sc">&lt;=</span> <span class="dv">10</span>) {  <span class="co"># First 10 years (Age 50 to 59)</span></span>
+<span id="cb86-76"><a href="#cb86-76" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate monthly growth rates for US Equities, International Equities, and Bonds</span></span>
+<span id="cb86-77"><a href="#cb86-77" aria-hidden="true" tabindex="-1"></a>    us_equity_growth_rate <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> (combined_data<span class="sc">$</span>us_equity_close[i] <span class="sc">/</span> combined_data<span class="sc">$</span>us_equity_close[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> equity_us_alloc</span>
+<span id="cb86-78"><a href="#cb86-78" aria-hidden="true" tabindex="-1"></a>    intl_equity_growth_rate <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> (combined_data<span class="sc">$</span>intl_equity_close[i] <span class="sc">/</span> combined_data<span class="sc">$</span>intl_equity_close[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> equity_international_alloc</span>
+<span id="cb86-79"><a href="#cb86-79" aria-hidden="true" tabindex="-1"></a>    bond_growth_rate <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> (combined_data<span class="sc">$</span>bond_yield[i] <span class="sc">/</span> <span class="dv">100</span>) <span class="sc">*</span> bonds_alloc</span>
+<span id="cb86-80"><a href="#cb86-80" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb86-81"><a href="#cb86-81" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {  <span class="co"># Age 60 to 74</span></span>
+<span id="cb86-82"><a href="#cb86-82" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate monthly growth rates for US Equities, International Equities, and Bonds</span></span>
+<span id="cb86-83"><a href="#cb86-83" aria-hidden="true" tabindex="-1"></a>    us_equity_growth_rate <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> (combined_data<span class="sc">$</span>us_equity_close[i] <span class="sc">/</span> combined_data<span class="sc">$</span>us_equity_close[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> equity_us_alloc_older</span>
+<span id="cb86-84"><a href="#cb86-84" aria-hidden="true" tabindex="-1"></a>    intl_equity_growth_rate <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> (combined_data<span class="sc">$</span>intl_equity_close[i] <span class="sc">/</span> combined_data<span class="sc">$</span>intl_equity_close[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> equity_international_alloc_older</span>
+<span id="cb86-85"><a href="#cb86-85" aria-hidden="true" tabindex="-1"></a>    bond_growth_rate <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> (combined_data<span class="sc">$</span>bond_yield[i] <span class="sc">/</span> <span class="dv">100</span>) <span class="sc">*</span> bonds_alloc_older</span>
+<span id="cb86-86"><a href="#cb86-86" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb86-87"><a href="#cb86-87" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-88"><a href="#cb86-88" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate the total growth rate for the year based on asset allocation</span></span>
+<span id="cb86-89"><a href="#cb86-89" aria-hidden="true" tabindex="-1"></a>  total_growth_rate <span class="ot">&lt;-</span> us_equity_growth_rate <span class="sc">+</span> intl_equity_growth_rate <span class="sc">+</span> bond_growth_rate</span>
+<span id="cb86-90"><a href="#cb86-90" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-91"><a href="#cb86-91" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Initialize the ORP balance for the first year</span></span>
+<span id="cb86-92"><a href="#cb86-92" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (i <span class="sc">==</span> <span class="dv">1</span>) {</span>
+<span id="cb86-93"><a href="#cb86-93" aria-hidden="true" tabindex="-1"></a>    orp_balance[i] <span class="ot">&lt;-</span> total_contribution</span>
+<span id="cb86-94"><a href="#cb86-94" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb86-95"><a href="#cb86-95" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Apply compound growth and add monthly contributions</span></span>
+<span id="cb86-96"><a href="#cb86-96" aria-hidden="true" tabindex="-1"></a>    orp_balance[i] <span class="ot">&lt;-</span> orp_balance[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> total_growth_rate <span class="sc">+</span> total_contribution</span>
+<span id="cb86-97"><a href="#cb86-97" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb86-98"><a href="#cb86-98" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb86-99"><a href="#cb86-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-100"><a href="#cb86-100" aria-hidden="true" tabindex="-1"></a><span class="co"># Output the data with monthly contributions and ORP balance for each year</span></span>
+<span id="cb86-101"><a href="#cb86-101" aria-hidden="true" tabindex="-1"></a>yearly_orp_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb86-102"><a href="#cb86-102" aria-hidden="true" tabindex="-1"></a>  <span class="at">Year =</span> <span class="dv">1</span><span class="sc">:</span>years_of_service,</span>
+<span id="cb86-103"><a href="#cb86-103" aria-hidden="true" tabindex="-1"></a>  <span class="at">Salary =</span> <span class="fu">round</span>(salaries, <span class="dv">2</span>),</span>
+<span id="cb86-104"><a href="#cb86-104" aria-hidden="true" tabindex="-1"></a>  <span class="at">Employee_Contribution =</span> <span class="fu">round</span>(employee_contributions, <span class="dv">2</span>),</span>
+<span id="cb86-105"><a href="#cb86-105" aria-hidden="true" tabindex="-1"></a>  <span class="at">Employer_Contribution =</span> <span class="fu">round</span>(employer_contributions, <span class="dv">2</span>),</span>
+<span id="cb86-106"><a href="#cb86-106" aria-hidden="true" tabindex="-1"></a>  <span class="at">Total_Contribution =</span> <span class="fu">round</span>(employee_contributions <span class="sc">+</span> employer_contributions, <span class="dv">2</span>),</span>
+<span id="cb86-107"><a href="#cb86-107" aria-hidden="true" tabindex="-1"></a>  <span class="at">ORP_Balance =</span> <span class="fu">round</span>(orp_balance, <span class="dv">2</span>)</span>
+<span id="cb86-108"><a href="#cb86-108" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb86-109"><a href="#cb86-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-110"><a href="#cb86-110" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(yearly_orp_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>TRS Monthly Benefit at Retirement (First Month): $ 2531.95 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ORP Monthly Withdrawal (First Month): $"</span>, <span class="fu">round</span>(orp_monthly_withdrawal, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>ORP Monthly Withdrawal (First Month): $ 17529.87 </code></pre>
+<pre><code>   Year   Salary Employee_Contribution Employer_Contribution Total_Contribution
+1     1 60000.00                225.00                400.00             625.00
+2     2 60296.88                226.11                401.98             628.09
+3     3 62411.23                234.04                416.07             650.12
+4     4 63755.62                239.08                425.04             664.12
+5     5 64589.87                242.21                430.60             672.81
+6     6 65890.13                247.09                439.27             686.36
+7     7 66526.64                249.47                443.51             692.99
+8     8 67882.19                254.56                565.68             820.24
+9     9 69862.27                261.98                582.19             844.17
+10   10 72204.87                270.77                601.71             872.48
+11   11 74110.60                277.91                617.59             895.50
+12   12 75287.21                360.75                627.39             988.14
+13   13 79272.15                379.85                660.60            1040.45
+14   14 85820.04                411.22                715.17            1126.39
+15   15 89196.53                427.40                743.30            1170.70
+    ORP_Balance
+1  6.250000e+02
+2  2.455140e+03
+3  8.192560e+03
+4  2.598461e+04
+5  8.060605e+04
+6  2.426391e+05
+7  7.471436e+05
+8  2.271601e+06
+9  6.898367e+06
+10 2.062157e+07
+11 6.279413e+07
+12 1.898736e+08
+13 5.679486e+08
+14 1.719854e+09
+15 5.247646e+09</code></pre>
 </div>
 </div>
 </section>
@@ -1637,122 +1356,8 @@ Adding another scale for y, which will replace the existing scale.</code></pre>
 <h2 class="anchored" data-anchor-id="fixed-rate-analysis">Fixed-Rate Analysis</h2>
 <p>To modify the simulation and project an employee’s pension benefit (TRS) or withdrawal amount (ORP) from retirement until death, we need to consider several key factors:</p>
 <p>Estimated Death Age: We’ll assume a reasonable life expectancy for the employee. Cost-of-Living Adjustments (COLA) for TRS: We’ll apply annual inflation adjustments to the TRS benefit, which increase by 50% of the CPI each year, capped at 3%. ORP Market Returns: We’ll assume long-run average returns for the ORP portfolio, based on historical equity, bond, and international equity returns. Projecting Retirement Income: We will simulate the monthly income over time, considering the employee’s longevity and both TRS and ORP scenarios.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters</span></span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>death_age <span class="ot">&lt;-</span> <span class="dv">85</span>  <span class="co"># Assumed age of death</span></span>
-<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>start_age <span class="ot">&lt;-</span> <span class="dv">50</span>  <span class="co"># Starting age of the employee</span></span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>current_age <span class="ot">&lt;-</span> start_age <span class="sc">+</span> <span class="dv">1</span>  <span class="co"># Employee starts at 51 after the first year</span></span>
-<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Time to simulate (from retirement to death)</span></span>
-<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>years_of_retirement <span class="ot">&lt;-</span> death_age <span class="sc">-</span> (start_age <span class="sc">+</span> (n_months <span class="sc">/</span> <span class="dv">12</span>))  <span class="co"># Years from retirement to death</span></span>
-<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a>total_months_in_retirement <span class="ot">&lt;-</span> years_of_retirement <span class="sc">*</span> <span class="dv">12</span>  <span class="co"># Total months in retirement</span></span>
-<span id="cb83-9"><a href="#cb83-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-10"><a href="#cb83-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize variables</span></span>
-<span id="cb83-11"><a href="#cb83-11" aria-hidden="true" tabindex="-1"></a>monthly_income_trs <span class="ot">&lt;-</span> <span class="fu">numeric</span>(total_months_in_retirement)</span>
-<span id="cb83-12"><a href="#cb83-12" aria-hidden="true" tabindex="-1"></a>monthly_income_orp <span class="ot">&lt;-</span> <span class="fu">numeric</span>(total_months_in_retirement)</span>
-<span id="cb83-13"><a href="#cb83-13" aria-hidden="true" tabindex="-1"></a>orp_balance_retirement <span class="ot">&lt;-</span> final_orp_balance  <span class="co"># Starting ORP balance at retirement</span></span>
-<span id="cb83-14"><a href="#cb83-14" aria-hidden="true" tabindex="-1"></a>trs_benefit_retirement <span class="ot">&lt;-</span> trs_monthly_benefit  <span class="co"># Starting TRS benefit at retirement</span></span>
-<span id="cb83-15"><a href="#cb83-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-16"><a href="#cb83-16" aria-hidden="true" tabindex="-1"></a><span class="co"># TRS: Apply COLA (cost of living adjustment) each year, capped at 3%</span></span>
-<span id="cb83-17"><a href="#cb83-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>total_months_in_retirement) {</span>
-<span id="cb83-18"><a href="#cb83-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (i <span class="sc">%%</span> <span class="dv">12</span> <span class="sc">==</span> <span class="dv">0</span>) {  <span class="co"># At the start of each year</span></span>
-<span id="cb83-19"><a href="#cb83-19" aria-hidden="true" tabindex="-1"></a>    inflation_rate <span class="ot">&lt;-</span> percentages<span class="sc">$</span>inflation_rate_growth[i <span class="sc">%%</span> n_months]  <span class="co"># Using inflation data from percentages</span></span>
-<span id="cb83-20"><a href="#cb83-20" aria-hidden="true" tabindex="-1"></a>    inflation_adjustment <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fl">0.03</span>, inflation_rate <span class="sc">*</span> <span class="fl">0.5</span>)  <span class="co"># Apply COLA, capped at 3%</span></span>
-<span id="cb83-21"><a href="#cb83-21" aria-hidden="true" tabindex="-1"></a>    trs_benefit_retirement <span class="ot">&lt;-</span> trs_benefit_retirement <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> inflation_adjustment)</span>
-<span id="cb83-22"><a href="#cb83-22" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb83-23"><a href="#cb83-23" aria-hidden="true" tabindex="-1"></a>  monthly_income_trs[i] <span class="ot">&lt;-</span> trs_benefit_retirement  <span class="co"># Monthly TRS income</span></span>
-<span id="cb83-24"><a href="#cb83-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb83-25"><a href="#cb83-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-26"><a href="#cb83-26" aria-hidden="true" tabindex="-1"></a><span class="co"># ORP: Apply 4% annual withdrawal rate and simulate market returns</span></span>
-<span id="cb83-27"><a href="#cb83-27" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>total_months_in_retirement) {</span>
-<span id="cb83-28"><a href="#cb83-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Apply monthly growth from historical returns (average returns assumed for simplicity)</span></span>
-<span id="cb83-29"><a href="#cb83-29" aria-hidden="true" tabindex="-1"></a>  average_market_growth <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">c</span>(percentages<span class="sc">$</span>us_equity_growth, percentages<span class="sc">$</span>intl_equity_growth, percentages<span class="sc">$</span>bond_yield), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb83-30"><a href="#cb83-30" aria-hidden="true" tabindex="-1"></a>  orp_balance_retirement <span class="ot">&lt;-</span> orp_balance_retirement <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> average_market_growth <span class="sc">/</span> <span class="dv">12</span>)  <span class="co"># Monthly compounded growth</span></span>
-<span id="cb83-31"><a href="#cb83-31" aria-hidden="true" tabindex="-1"></a>  orp_monthly_withdrawal <span class="ot">&lt;-</span> orp_balance_retirement <span class="sc">*</span> <span class="fl">0.04</span> <span class="sc">/</span> <span class="dv">12</span>  <span class="co"># 4% annual withdrawal rate</span></span>
-<span id="cb83-32"><a href="#cb83-32" aria-hidden="true" tabindex="-1"></a>  orp_balance_retirement <span class="ot">&lt;-</span> orp_balance_retirement <span class="sc">-</span> orp_monthly_withdrawal  <span class="co"># Subtract withdrawal</span></span>
-<span id="cb83-33"><a href="#cb83-33" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb83-34"><a href="#cb83-34" aria-hidden="true" tabindex="-1"></a>  monthly_income_orp[i] <span class="ot">&lt;-</span> orp_monthly_withdrawal  <span class="co"># Monthly ORP income</span></span>
-<span id="cb83-35"><a href="#cb83-35" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb83-36"><a href="#cb83-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Stop the ORP withdrawals if the balance runs out</span></span>
-<span id="cb83-37"><a href="#cb83-37" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (orp_balance_retirement <span class="sc">&lt;=</span> <span class="dv">0</span>) {</span>
-<span id="cb83-38"><a href="#cb83-38" aria-hidden="true" tabindex="-1"></a>    monthly_income_orp[i] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb83-39"><a href="#cb83-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span>
-<span id="cb83-40"><a href="#cb83-40" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb83-41"><a href="#cb83-41" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb83-42"><a href="#cb83-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-43"><a href="#cb83-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the maximum and minimum income gap between TRS and ORP</span></span>
-<span id="cb83-44"><a href="#cb83-44" aria-hidden="true" tabindex="-1"></a>income_gap <span class="ot">&lt;-</span> monthly_income_trs <span class="sc">-</span> monthly_income_orp</span>
-<span id="cb83-45"><a href="#cb83-45" aria-hidden="true" tabindex="-1"></a>max_gap <span class="ot">&lt;-</span> <span class="fu">max</span>(income_gap, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb83-46"><a href="#cb83-46" aria-hidden="true" tabindex="-1"></a>min_gap <span class="ot">&lt;-</span> <span class="fu">min</span>(income_gap, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb83-47"><a href="#cb83-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-48"><a href="#cb83-48" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average monthly income for both TRS and ORP</span></span>
-<span id="cb83-49"><a href="#cb83-49" aria-hidden="true" tabindex="-1"></a>avg_income_trs <span class="ot">&lt;-</span> <span class="fu">mean</span>(monthly_income_trs, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb83-50"><a href="#cb83-50" aria-hidden="true" tabindex="-1"></a>avg_income_orp <span class="ot">&lt;-</span> <span class="fu">mean</span>(monthly_income_orp, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb83-51"><a href="#cb83-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-52"><a href="#cb83-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Determine if ORP funds run out before death or if there are funds left for heirs</span></span>
-<span id="cb83-53"><a href="#cb83-53" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (orp_balance_retirement <span class="sc">&lt;=</span> <span class="dv">0</span>) {</span>
-<span id="cb83-54"><a href="#cb83-54" aria-hidden="true" tabindex="-1"></a>  run_out_of_funds <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
-<span id="cb83-55"><a href="#cb83-55" aria-hidden="true" tabindex="-1"></a>  remaining_funds <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb83-56"><a href="#cb83-56" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb83-57"><a href="#cb83-57" aria-hidden="true" tabindex="-1"></a>  run_out_of_funds <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
-<span id="cb83-58"><a href="#cb83-58" aria-hidden="true" tabindex="-1"></a>  remaining_funds <span class="ot">&lt;-</span> orp_balance_retirement</span>
-<span id="cb83-59"><a href="#cb83-59" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb83-60"><a href="#cb83-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb83-61"><a href="#cb83-61" aria-hidden="true" tabindex="-1"></a><span class="co"># Output results</span></span>
-<span id="cb83-62"><a href="#cb83-62" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Average Monthly Income - TRS: $"</span>, <span class="fu">round</span>(avg_income_trs, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Average Monthly Income - TRS: $ 2573.32 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Average Monthly Income - ORP: $"</span>, <span class="fu">round</span>(avg_income_orp, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Average Monthly Income - ORP: $ 13956.3 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Maximum Monthly Income Gap (TRS vs ORP): $"</span>, <span class="fu">round</span>(max_gap, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Maximum Monthly Income Gap (TRS vs ORP): $ -8261.52 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Minimum Monthly Income Gap (TRS vs ORP): $"</span>, <span class="fu">round</span>(min_gap, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Minimum Monthly Income Gap (TRS vs ORP): $ -15020.06 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"TRS Monthly Benefit at Retirement (First Month): $"</span>, <span class="fu">round</span>(trs_monthly_benefit, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>TRS Monthly Benefit at Retirement (First Month): $ 2531.95 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ORP Monthly Withdrawal at Retirement (First Month): $"</span>, <span class="fu">round</span>(orp_monthly_withdrawal, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>ORP Monthly Withdrawal at Retirement (First Month): $ 10886.85 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (run_out_of_funds) {</span>
-<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"ORP funds run out before death. There are no funds left for heirs.</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"ORP funds last until death. Remaining funds for heirs: $"</span>, <span class="fu">round</span>(remaining_funds, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>ORP funds last until death. Remaining funds for heirs: $ 3255167 </code></pre>
-</div>
-</div>
+<p>I want to expleriment something, lets do just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. THE NEW SALARY. Meaning, you would see the initial salary of 60000, then, the new salary would be in september. To get the new salary you would use wage growth. so YOU WOULD get the september of the first year, I want to expleriment something, lets do just the fist one, the TRS, AND WE WILL MAKE SURE WE CAN DO IT RIGHT. FIRST THE DATA WE GONNA USE IS THE COMBINED_DATA. BECAUSE THE DATA IS NOT PERCENTAGES, WE GONNA USE FOR EVERY SEPTEMBER. to get the new salary, what you would do is use the CPI. So you would see the september cpi fore exapme of the first year and januar, and you would divide september cpi inflation growth and january for the firs one. FOr the second year, you would use september of the first year 2009 and september of the new year of the cpi divided in that way you get the percentage. and you would multiply the salary by that percentage.</p>
+<p>with that you would get the new salary for each year. until retirement. Now we need to use this formaula. 0.0167* FAS * years of service. so we need to get the FAS, TO GET FAS IS THE average salary for the las 3 years. with the last formula you would get the benefits for the program.</p>
 
 
 </section>
