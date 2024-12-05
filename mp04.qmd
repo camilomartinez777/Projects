@@ -572,9 +572,6 @@ if (years_of_service <= 20) {
 cat("Annual TRS Benefit: $", round(annual_benefit, 2), "\n")
 cat("Monthly TRS Benefit: $", round(annual_benefit/12, 2 ), "\n")
 
-##make a better table for this
-gt <- 
-
 
 ```
 
