@@ -34,15 +34,18 @@ The following are the libraries we would use throughtout the project.
 #| warning: false
 #| code-fold: true
 #| code-summary: "Show the code"
-library(httr2)    # For API requests
-library(dplyr)    # For data manipulation
-library(ggplot2)  # For visualization
-library(zoo)      # For handling time-series data and filling missing values
-library(DT)
-library(ggcorrplot)
-library(lubridate)
-library(gt)
-library(plotly)
+library(httr2)       # API requests
+library(dplyr)       # Data manipulation
+library(ggplot2)     # Visualization
+library(zoo)         # Time-series data
+library(DT)          # Interactive tables
+library(ggcorrplot)  # Correlation plots
+library(lubridate)   # Date/time handling
+library(gt)          # Publication-quality tables
+library(plotly)      # Interactive plots
+library(tidyr)       # Data reshaping
+
+
 
 
 ```
@@ -567,17 +570,17 @@ fas <- mean(salaries[(years_of_service-2):years_of_service])
 
 # Calculate the Annual Retirement Benefit based on years of service
 if (years_of_service <= 20) {
-  annual_benefit <- 0.0167 * fas * years_of_service
+  annual_benefit_trs <- 0.0167 * fas * years_of_service
 } else if (years_of_service == 20) {
-  annual_benefit <- 0.0175 * fas * years_of_service
+  annual_benefit_trs <- 0.0175 * fas * years_of_service
 } else {
-  annual_benefit <- (0.35 + 0.02 * years_of_service) * fas
+  annual_benefit_trs <- (0.35 + 0.02 * years_of_service) * fas
 }
 
 # Prepare the data for the table
 trs_benefit_data <- data.frame(
   Benefit_Type = c("Annual TRS Benefit", "Monthly TRS Benefit"),
-  Amount = c(round(annual_benefit, 2), round(annual_benefit / 12, 2))
+  Amount = c(round(annual_benefit_trs, 2), round(annual_benefit_trs / 12, 2))
 )
 
 # Create and display the table using gt
@@ -860,7 +863,7 @@ In this image we can see clearly the power of compounding. The total accumulated
 ```{r}
 # Calculate monthly benefits
 monthly_benefit_opr <- annual_benefit_opr / 12
-monthly_benefit_trs <- annual_benefit / 12
+monthly_benefit_trs <- annual_benefit_trs / 12
 
 # Create a data frame for plotting
 benefit_data <- data.frame(
@@ -901,4 +904,220 @@ This comparison provides valuable insight into the financial implications of sel
 ## Fixed-Rate Analysis
 
 To modify the simulation and project an employee's pension benefit (TRS) or withdrawal amount (ORP) from retirement until death, we need to consider several key factors:
+
+1. **Retirement Age**: The age at which the employee retires and begins receiving benefits.
+2. **Death Age**: The estimated age at which the employee will pass away.
+
+
+```{r}
+# Parameters
+retirement_age <- 65
+death_age <- 90  # Estimated death age
+years_in_retirement <- death_age - retirement_age
+
+# Initialize the mean weighted performance
+mean_performance <- mean(
+  (equity_us_alloc * yearly_performance_data$US_Equity_Performance) +
+  (equity_international_alloc * yearly_performance_data$International_Equity_Performance) +
+  (bonds_alloc * yearly_performance_data$Bonds_Performance),
+  na.rm = TRUE
+)
+
+# Use this value as your fixed return rate for ORP
+fixed_return_rate <- (mean_performance-1) #based on the performance of from the last 15 years of investments. 
+
+# Fixed rate assumptions
+fixed_return_rate <- fixed_return_rate  # Fixed annual return rate for ORP
+withdrawal_rate <- 0.04  # Initial ORP withdrawal rate
+
+# Calculate the average inflation from the combined_data dataset
+avg_inflation <- mean(combined_data$inflation_rate, na.rm = TRUE) / 100  # Convert to decimal form
+
+
+# Starting values
+trs_annual_benefit <- annual_benefit_trs  # TRS annual benefit
+orp_balance <- yearly_performance_data$Total_Accumulated[years_of_service]  # ORP final balance at retirement
+
+# Initialize vectors to store results
+trs_benefits <- numeric(years_in_retirement)
+orp_withdrawals <- numeric(years_in_retirement)
+orp_balances <- numeric(years_in_retirement)
+income_gaps <- numeric(years_in_retirement)
+
+# Simulation
+for (year in 1:years_in_retirement) {
+  # TRS Benefit (adjusted for inflation with caps)
+  if (year == 1) {
+    trs_benefits[year] <- trs_annual_benefit
+  } else {
+    cpi_adjustment <- max(min(avg_inflation * 0.5, 0.03), 0.01)  # Cap between 1% and 3%
+    trs_benefits[year] <- trs_benefits[year - 1] * (1 + cpi_adjustment)
+  }
+  
+  # ORP Withdrawal: Fixed percentage of the previous year's balance
+  if (year == 1) {
+    orp_withdrawals[year] <- orp_balance * withdrawal_rate
+    orp_balance <- orp_balance * (1 + fixed_return_rate) - orp_withdrawals[year]
+  } else {
+    orp_withdrawals[year] <- orp_balances[year - 1] * withdrawal_rate
+    orp_balance <- (orp_balances[year - 1] - orp_withdrawals[year]) * (1 + fixed_return_rate)
+  }
+  
+  # Ensure balance never goes negative
+  orp_balances[year] <- max(orp_balance, 0)
+  if (orp_balance <= 0) {
+    orp_withdrawals[year] <- 0
+  }
+  
+  # Income gap (Annually)
+  income_gaps[year] <- trs_benefits[year] - orp_withdrawals[year]
+}
+
+# Create results data frame
+results <- data.frame(
+  Year = retirement_age:(death_age - 1),
+  TRS_Annual_Income = trs_benefits,
+  ORP_Annual_Withdrawal = orp_withdrawals,
+  ORP_Balance_Remaining = orp_balances,
+  Income_Gap_Annual = income_gaps
+)
+
+# Prepare data for visualization
+graph_data <- results |>
+  select(Year, TRS_Annual_Income, ORP_Annual_Withdrawal, ORP_Balance_Remaining) |>
+  pivot_longer(
+    cols = c(TRS_Annual_Income, ORP_Annual_Withdrawal),
+    names_to = "Plan",
+    values_to = "Annual_Income"
+  ) |>
+  mutate(
+    Plan = recode(
+      Plan, 
+      TRS_Annual_Income = "TRS Annual Income", 
+      ORP_Annual_Withdrawal = "ORP Annual Withdrawal"
+    )
+  )
+
+# Plot TRS and ORP incomes over time
+income_plot <- graph_data |>
+  ggplot(aes(x = Year, y = Annual_Income, color = Plan, group = Plan)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(
+    title = "Comparison of TRS and ORP Annual Income Over Time",
+    x = "Year of Retirement",
+    y = "Annual Income ($)",
+    color = "Retirement Plan"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.title = element_text(size = 14)
+  ) +
+  scale_y_continuous(labels = scales::dollar_format())
+
+# Display the plots
+income_plot
+```
+### Comparison of TRS and ORP Income
+
+1. **TRS Income**:
+   - TRS income grows steadily, driven by inflation adjustments, ensuring higher and more consistent income throughout retirement.
+
+2. **ORP Withdrawals**:
+   - ORP withdrawals grow modestly and lack inflation adjustments, leading to slower income growth over time.
+
+3. **Income Gap**:
+   - The gap between TRS and ORP widens significantly, with TRS consistently providing higher income.
+
+4. **Key Insight**:
+   - TRS is better for retirees needing stable, inflation-protected income, while ORP offers lower growth and purchasing power over time.
+
+```{r}
+# Plot ORP remaining balance over time
+orp_balance_plot <- results |>
+  ggplot(aes(x = Year, y = ORP_Balance_Remaining)) +
+  geom_line(color = "blue", size = 1.2) +
+  geom_point(size = 2) +
+  labs(
+    title = "Growth of ORP Investment Balance Over Time",
+    x = "Year of Retirement",
+    y = "ORP Balance Remaining ($)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.title = element_text(size = 14)
+  ) +
+  scale_y_continuous(labels = scales::dollar_format())
+
+# Display the ORP balance plot
+orp_balance_plot
+```
+While TRS may provide a higher and more stable income, the ORP plan demonstrates strong growth in its investment balance over time. This highlights the plan’s long-term sustainability. Additionally, ORP offers greater flexibility, giving employees more control over their investments. 
+
+One key advantage of ORP is that employees can access the full balance if needed, providing the freedom to use the funds as desired, whether for unexpected expenses, large purchases, or other financial goals. This flexibility makes ORP a viable option for those who value control over their retirement savings.
+
+
+```{r}
+# Calculate values
+avg_monthly_trs <- mean(results$TRS_Annual_Income) / 12
+avg_monthly_orp <- mean(results$ORP_Annual_Withdrawal) / 12
+monthly_income_gaps <- results$Income_Gap_Annual / 12
+max_gap <- max(monthly_income_gaps)
+min_gap <- min(monthly_income_gaps)
+
+# Create a data frame for the table
+summary_data <- data.frame(
+  Metric = c(
+    "Average Monthly Income (TRS)",
+    "Average Monthly Income (ORP)",
+    "Maximum Monthly Income Gap (TRS - ORP)",
+    "Minimum Monthly Income Gap (TRS - ORP)"
+  ),
+  Value = c(
+    avg_monthly_trs,
+    avg_monthly_orp,
+    max_gap,
+    min_gap
+  )
+)
+
+# Format the table using gt
+summary_table <- summary_data |>
+  gt() |>
+  fmt_currency(
+    columns = "Value",
+    currency = "USD",
+    decimals = 2
+  ) |>
+  tab_header(
+    title = "Comparison of TRS and ORP Income Metrics"
+  ) |>
+  cols_label(
+    Metric = "Income Metric",
+    Value = "Amount ($)"
+  ) |>
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+    ),
+    locations = cells_title(groups = "title")
+  )
+
+# Print the table
+summary_table
+```
+## Conclusion About the two programs
+
+1. **Average Monthly Income**:
+   - TRS provides significantly higher average monthly income ($2,580.50) compared to ORP ($1,414.74), making it more reliable for covering living expenses.
+
+2. **Income Gap**:
+   - The maximum monthly income gap is $1,485.45, while the minimum is $886.08, showing that TRS consistently outperforms ORP.
+
+3. **Key Insight**:
+   - TRS offers superior income stability and growth, while ORP's lower payouts may struggle to meet retirement needs over time.
+
 
