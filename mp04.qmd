@@ -415,7 +415,7 @@ We will calculate the correlation matrix to understand the relationships between
 
 ```{r}
 # Select only numeric columns
-numeric_data <- combined_data %>%
+numeric_data <- combined_data |>
   select(where(is.numeric))
 
 # Compute the correlation matrix
@@ -435,9 +435,7 @@ ggcorrplot(cor_matrix,
 )
 ```
 
-# Key Findings on Economic Factors and Retirement Planning
-
-In this analysis, we examine the relationships between several key economic factors, including inflation, wage growth, stock market returns (both US and international), bond yields, and short-term debt yields. Understanding how these factors are correlated can provide valuable insights for making informed financial decisions, particularly for retirement planning.
+In this initial analysis we examine the relationships between several key economic factors, including inflation, wage growth, stock market returns (both US and international), bond yields, and short-term debt yields. Understanding how these factors are correlated can provide valuable insights for making informed financial decisions, particularly for retirement planning.
 
 ## Key Findings:
 
@@ -480,6 +478,7 @@ In this analysis, we examine the relationships between several key economic fact
 -   **Correlation**: 0.75 (Strong)
 -   **Interpretation**: Bond yields and short-term yields tend to move in the same direction, which suggests that both types of bonds respond similarly to changes in interest rates.
 
+
 ## Implications for Retirement Planning:
 
 -   **Wage Growth and Inflation**: The close correlation between wage growth and inflation means that as prices rise, your income should likely increase, helping you maintain purchasing power in retirement.
@@ -490,7 +489,8 @@ In this analysis, we examine the relationships between several key economic fact
 
 # Historical Comparison of TRS and ORP
 
-### TRS vs. ORP: Retirement Comparison
+Now, we want to compare this two models by evaluating the same initial salary and years of service, in that way we would choose the best model possible. We would have to take the following in consideration:
+
 
 ## Initial Setup and Parameters
 - **Initial Salary**: $60,000.
@@ -520,7 +520,7 @@ In this analysis, we examine the relationships between several key economic fact
 1. **Portfolio Allocation**:
    - Adjusted allocations for US equities, international equities, and bonds based on age brackets:
      - Ages 50-59: Higher equity allocation.
-     - Ages 60-74: Increased bond allocation.
+     - Ages 60-74: Increased bond allocation to have more stability. 
 2. Calculated annual performance for each asset class using growth rates from the `combined_data` dataset:
    - US and international equity growth based on stock market performance.
    - Bond yields calculated as annual averages.
@@ -532,6 +532,10 @@ In this analysis, we examine the relationships between several key economic fact
 The following code snippets will calculate the retirement benefits for both TRS and ORP based on the assumptions outlined above. We will compare the monthly benefits and accumulated funds for each plan to provide a comprehensive analysis of the retirement options.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
+#| code-fold: true
 
 # Set initial salary and define years of service
 initial_salary <- 60000
@@ -604,12 +608,13 @@ trs_benefit_data |>
   )
 
 ```
-```{r}
-print(cpi_growth)
-```
 We can notice the money a professor would get from the TRS plan. Now we would calculate the contributions for the OPR plan.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
+
 # Initialize parameters
 initial_salary <- 60000  # Starting salary
 years_of_service <- 15   # Number of years to simulate
@@ -808,20 +813,20 @@ opr_benefit_table <- data.frame(
   Amount = c(round(annual_benefit_opr, 2), round(monthly_benefit_opr, 2))
 )
 
-opr_benefit_table %>%
-  gt() %>%
+opr_benefit_table |>
+  gt() |>
   tab_header(
     title = "OPR Benefit Summary",
     subtitle = paste("Year", years_of_service, "Calculation")
-  ) %>%
+  ) |>
   fmt_currency(
     columns = "Amount",
     currency = "USD"
-  ) %>%
+  ) |>
   cols_label(
     Metric = "Benefit Type",
     Amount = "Amount ($)"
-  ) %>%
+  ) |>
   tab_style(
     style = list(
       cell_text(weight = "bold")
@@ -842,11 +847,11 @@ plot_data <- data.frame(
 )
 
 # Create the interactive graph
-plot <- plot_ly(plot_data, x = ~Year) %>%
+plot <- plot_ly(plot_data, x = ~Year) |>
   add_trace(y = ~Total_Accumulated, type = 'scatter', mode = 'lines+markers', name = 'Compounding $',
-            hovertemplate = 'Year: %{x}<br>Total Accumulated: %{y:.2f}<extra></extra>') %>%
+            hovertemplate = 'Year: %{x}<br>Total Accumulated: %{y:.2f}<extra></extra>') |>
   add_trace(y = ~Total_Contributions, type = 'scatter', mode = 'lines+markers', name = 'Total Contributions',
-            hovertemplate = 'Year: %{x}<br>Total Contributions: %{y:.2f}<extra></extra>') %>%
+            hovertemplate = 'Year: %{x}<br>Total Contributions: %{y:.2f}<extra></extra>') |>
   layout(
     title = 'Interactive Graph: Total Accumulation vs. Contributions',
     xaxis = list(title = 'Year'),
@@ -861,7 +866,7 @@ plot
 In this image we can see clearly the power of compounding. The total accumulated amount grows over time due to the contributions and the compound effect of the investment returns. This visualization provides a clear representation of how the retirement savings can grow over the years, highlighting the importance of consistent contributions and wise investment choices.
 
 
-##Comparative Analysis of TRS and ORP
+## Comparative Analysis of TRS and ORP
 
 ```{r}
 # Calculate monthly benefits
@@ -1089,6 +1094,7 @@ This analysis will allow for a better understanding of the ORP plan's robustness
 
 
 ```{r}
+
 # Parameters
 retirement_age <- 65  # Retirement start age
 death_age <- 90       # End of simulation age
@@ -1282,7 +1288,7 @@ exhaustion_table <- data.frame(
 library(gt)
 
 # Generate a formatted table with results
-gt_exhaustion_table <- exhaustion_table %>%
+gt_exhaustion_table <- exhaustion_table |>
   gt() |>
   tab_header(
     title = "Probability of ORP Savings Exhaustion",
@@ -1341,7 +1347,7 @@ gt <- gt(higher_income_table) |>
     Withdrawal_Rate = "Withdrawal Rate",
     Probability = "Higher Income Probability (%)"
   ) |>
-  tab_spanner(label = "Higher Income Probability (%)", columns = c(2)) %>%
+  tab_spanner(label = "Higher Income Probability (%)", columns = c(2)) |>
   tab_options(
     table.font.size = "medium",
     heading.align = "center"
@@ -1350,7 +1356,7 @@ gt
 ```
 As we can see, the percentage doesn't change on all the withdrawal rates. This means that the OPR could have better months than the TRS. However, as we saw in the previous graphs, that just would happens if the retiree has a higher withdrawal rate and would just happens for the first few years. 
 
-#Final Recommendations for OPR
+# Final Recommendations for OPR
 
 Now we want to prove why our recommendation is 6% for the withdrawal rate. 
 
