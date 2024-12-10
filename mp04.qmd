@@ -1023,7 +1023,7 @@ income_plot <- graph_data |>
 # Display the plots
 income_plot
 ```
-### Comparison of TRS and ORP Income
+## Comparison of TRS and ORP Income
 
 1. **TRS Income**:
    - TRS income grows steadily, driven by inflation adjustments, ensuring higher and more consistent income throughout retirement.
