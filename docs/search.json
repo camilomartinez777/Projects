@@ -621,5 +621,89 @@
     "title": "Airbnb Project / Walkability Index",
     "section": "Insights",
     "text": "Insights\n\nWalkability has a small, but statistically significant, effect on Airbnb prices.\nFactors like amenities, neighborhood features, and room size likely have a bigger impact.\nMore detailed analysis with additional factors could give a clearer picture of what drives Airbnb pricing.\n\n\nRecommendations\n\nAdd More Factors:\n\nInclude details like nearby parks, grocery stores, schools, and crime rates.\nLook at things like nightlife, noise levels, and access to public transport.\n\nUse More Geographic Data:\n\nCombine the Walkability Index with data on transit stops, street layout, and nearby shops.\nCreate maps to see how prices vary by location and walkability.\n\nCompare Different Segments:\n\nStudy how walkability affects different property types, like shared rooms versus entire homes.\nLook at differences between cities, suburbs, and rural areas.\n\nRefine Walkability Measures:\n\nFocus on specific parts of the Walkability Index, like pedestrian-friendly streets or access to daily necessities.\nAdd data like real-time foot traffic or reviews about walkability.\n\nTry Advanced Methods:\n\nUse other machine learning to find out which factors matter most for prices.\nGroup neighborhoods by similar walkability and pricing patterns for better insights."
+  },
+  {
+    "objectID": "individual.html",
+    "href": "individual.html",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "",
+    "text": "Does the walkability index of NYC affects the listing pricing?\n\n\nThis project investigates how walkability influences Airbnb pricing in New York City. By integrating walkability indices with Airbnb listings data, we aim to uncover patterns that can benefit both hosts and travelers.\n\nHosts: Leverage walkability insights to optimize pricing.\nTravelers: Understand walkability’s impact on accommodation choices and budgets.\n\n\n\n\nHigher walkability positively correlates with higher Airbnb prices due to convenience and proximity to amenities.\n\n\n\n\nData Collection: Combine Airbnb listing data and EPA Walkability Index.\nData Processing: Merge datasets for analysiS and add spatial features.\nData Cleaning: Remove outliers, handle missing values, and preprocess data for analysis.\nExploratory Data Analysis: Use visualization methods to explore correlations and trends in a spatial context.(New York City)\nModeling: Conduct linear regression to quantify walkability’s impact on pricing."
+  },
+  {
+    "objectID": "individual.html#objective",
+    "href": "individual.html#objective",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "",
+    "text": "This project investigates how walkability influences Airbnb pricing in New York City. By integrating walkability indices with Airbnb listings data, we aim to uncover patterns that can benefit both hosts and travelers.\n\nHosts: Leverage walkability insights to optimize pricing.\nTravelers: Understand walkability’s impact on accommodation choices and budgets."
+  },
+  {
+    "objectID": "individual.html#hypothesis",
+    "href": "individual.html#hypothesis",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "",
+    "text": "Higher walkability positively correlates with higher Airbnb prices due to convenience and proximity to amenities."
+  },
+  {
+    "objectID": "individual.html#methodology",
+    "href": "individual.html#methodology",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "",
+    "text": "Data Collection: Combine Airbnb listing data and EPA Walkability Index.\nData Processing: Merge datasets for analysiS and add spatial features.\nData Cleaning: Remove outliers, handle missing values, and preprocess data for analysis.\nExploratory Data Analysis: Use visualization methods to explore correlations and trends in a spatial context.(New York City)\nModeling: Conduct linear regression to quantify walkability’s impact on pricing."
+  },
+  {
+    "objectID": "individual.html#data-sources",
+    "href": "individual.html#data-sources",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Data Sources",
+    "text": "Data Sources\n\nAirbnb Listings: Data from 2019 and 2023.\nWalkability Index: EPA Walkability Index API.\nGeospatial Data: NYC Census Block Groups (CBGs)."
+  },
+  {
+    "objectID": "individual.html#libraries",
+    "href": "individual.html#libraries",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Libraries",
+    "text": "Libraries\n\n\nShow the code\nlibrary(dplyr)       # Data manipulation\nlibrary(sf)          # Handling spatial data\nlibrary(geosphere)   # Geospatial calculations\nlibrary(httr)        # HTTP requests\nlibrary(tigris)      # Census and geographic data\nlibrary(ggplot2)     # Visualization\nlibrary(leaflet)     # Interactive mapping\nlibrary(gt)          # Table formatting"
+  },
+  {
+    "objectID": "individual.html#fetching-walkability-index-data",
+    "href": "individual.html#fetching-walkability-index-data",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Fetching Walkability Index Data",
+    "text": "Fetching Walkability Index Data\nNow we proceed to download the Walkability Index data from the EPA API.\nThe documentation for the API can be found here. The following code would help you download the data from the API."
+  },
+  {
+    "objectID": "individual.html#adding-spatial-features-to-airbnb-data",
+    "href": "individual.html#adding-spatial-features-to-airbnb-data",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Adding Spatial Features to Airbnb Data",
+    "text": "Adding Spatial Features to Airbnb Data\nTo incorporate geographic context into the Airbnb dataset, we:\n\nDownload Census Block Groups (CBGs): Use the tigris package to get New York State CBGs.\nPerform a Spatial Join: Map Airbnb latitude/longitude points to their corresponding CBGs.\nAdd GEOID: Assign each Airbnb entry a GEOID, aligning with the Walkability Index’s GEOID20 for seamless merging.\n\nThis enhances the Airbnb dataset with geographic information for further analysis.\n\n\nShow the code\n# Download Census Block Groups for New York State\nny_block_groups &lt;- block_groups(state = \"NY\", year = 2020, cb = TRUE)\n\n# Check if CRS is undefined\nif (is.na(st_crs(ny_block_groups))) {\n  stop(\"CRS for ny_block_groups is undefined. Define it before proceeding.\")\n}\n\n# Assign WGS84 CRS to airbnb_filtered if it uses lat/lon\nif (is.na(st_crs(airbnb_filtered))) {\n  airbnb_sf &lt;- st_as_sf(airbnb_filtered, coords = c(\"longitude\", \"latitude\"), crs = 4326)\n} else {\n  airbnb_sf &lt;- st_as_sf(airbnb_filtered, coords = c(\"longitude\", \"latitude\"))\n}\n\n# Transform CRS of airbnb_sf to match ny_block_groups if necessary\nif (!st_crs(airbnb_sf)$epsg == st_crs(ny_block_groups)$epsg) {\n  airbnb_sf &lt;- st_transform(airbnb_sf, crs = st_crs(ny_block_groups))\n}\n\n# Perform spatial join to associate attributes\nairbnb_with_block &lt;- st_join(airbnb_sf, ny_block_groups, join = st_within)\n\n# Replace point geometries with the corresponding block group geometries\nairbnb_with_block$geometry &lt;- ny_block_groups$geometry[match(\n  airbnb_with_block$GEOID, ny_block_groups$GEOID\n)]\n\n#Now we proceed to merge the walkability index data with the airbnb data set.\n\n# Step 1: Remove `sf` class from walkability\nwalkability_no_sf &lt;- st_drop_geometry(walkability)\n\n# Step 2: Perform attribute join\nairbnb_with_walkability &lt;- airbnb_with_block |&gt;\n  left_join(walkability_no_sf, by = c(\"GEOID\" = \"GEOID20\"))"
+  },
+  {
+    "objectID": "individual.html#steps",
+    "href": "individual.html#steps",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Steps:",
+    "text": "Steps:\n\nData Cleaning:\n\nSelect relevant columns: neighbourhood_group, neighbourhood, room_type, price, GEOID, and NatWalkInd.\n\nRemove rows with missing values in the price or NatWalkInd columns.\n\nOutlier Detection and Removal:\n\nUse the Interquartile Range (IQR) method to identify outliers in the price column.\n\nRemove rows with outlier prices to improve data consistency.\n\n\n\n\nShow the code\n# Select and clean necessary columns\nairbnb_cleaned &lt;- airbnb_with_walkability |&gt;\n  select(neighbourhood_group, neighbourhood, room_type, price, GEOID, NatWalkInd) |&gt; # Select relevant columns\n  filter(!is.na(price) & !is.na(NatWalkInd))  # Remove rows with missing price or walkability index\n\n\n#Outliers\n# Define the IQR-based outlier threshold function\noutlier_threshold &lt;- function(x) {\n  Q1 &lt;- quantile(x, 0.25, na.rm = TRUE)\n  Q3 &lt;- quantile(x, 0.75, na.rm = TRUE)\n  IQR &lt;- Q3 - Q1\n  lower &lt;- Q1 - 1.5 * IQR\n  upper &lt;- Q3 + 1.5 * IQR\n  return(list(lower = lower, upper = upper))\n}\n\n# Apply the function to identify outlier thresholds\nthresholds &lt;- outlier_threshold(airbnb_cleaned$price)\n\n# Add a column identifying outliers\nairbnb_cleaned &lt;- airbnb_cleaned |&gt;\n  mutate(\n    is_outlier = price &lt; thresholds$lower | price &gt; thresholds$upper\n  )\n\n# Count the number of outliers\nnum_outliers &lt;- sum(airbnb_cleaned$is_outlier, na.rm = TRUE)\n\n# Remove outliers\nairbnb_cleaned_no_outliers &lt;- airbnb_cleaned |&gt;\n  filter(!is_outlier)\n\n# Enhanced histogram with removed outliers annotation\nggplot(airbnb_cleaned, aes(x = price, fill = is_outlier)) +\n  geom_histogram(binwidth = 10, color = \"black\", alpha = 0.7, position = \"identity\") +\n  scale_fill_manual(values = c(\"FALSE\" = \"gray\", \"TRUE\" = \"red\")) +\n  labs(\n    title = \"Airbnb Price Distribution with Outliers Highlighted\",\n    x = \"Price\",\n    y = \"Count\",\n    fill = \"Outlier\"\n  ) +\n  theme_minimal() +\n  xlim(0, quantile(airbnb_cleaned$price, 0.99, na.rm = TRUE)) +  # Optional: Limit x-axis\n  annotate(\n    \"text\",\n    x = quantile(airbnb_cleaned$price, 0.75, na.rm = TRUE),  # Position annotation\n    y = max(table(cut(airbnb_cleaned$price, seq(0, max(airbnb_cleaned$price, na.rm = TRUE), 10)))),\n    label = paste(num_outliers, \"Outliers Removed\"),\n    color = \"red\",\n    size = 5,\n    hjust = 0\n  )\n\n\n\n\n\n\n\n\n\nIn this step, we enhance the Airbnb dataset with geographic context and prepare it for further analysis:\n\nLoad NYC Boundary Shape: The NYC boundary shape is loaded from an open GeoJSON file to establish spatial boundaries for the analysis.(to have a better visualization)\nCoordinate Reference System (CRS) Transformation: The Census Block Groups (CBGs) data is transformed to WGS84 (EPSG:4326) to ensure it aligns with the Airbnb dataset.\nSummarize Data for Private Rooms: The Airbnb data is filtered to include only private room listings. These listings are grouped by GEOID, neighborhood, and neighborhood group to calculate:\n\nAverage Price: The mean price for private rooms in each group.\nAverage Walkability Index: The mean walkability index for each group. (Which is the same)\n\nMerge Datasets: The summarized Airbnb data is joined with the CBG dataset using GEOID as a key, enriching the spatial dataset with pricing and walkability metrics.\n\n\n\nShow the code\n# Load NYC boundary shape (GeoJSON from NYC OpenData)\nnyc_boundary &lt;- st_read(\"https://data.cityofnewyork.us/resource/7t3b-ywvw.geojson\")\n\nny_block_groups &lt;- st_transform(ny_block_groups, crs = 4326)\n\n# Step 1: Group and summarize data for private rooms\nprivate_room_avg_price &lt;- airbnb_cleaned_no_outliers |&gt;\n  filter(room_type == \"Private room\") |&gt;  # Filter for private rooms\n  st_set_geometry(NULL) |&gt;                # Temporarily remove geometry\n  group_by(GEOID, neighbourhood_group, neighbourhood) |&gt;  # Group by GEOID and neighborhoods\n  summarize(\n    avg_price = mean(price, na.rm = TRUE),       # Calculate average price\n    avg_NatWalkInd = mean(NatWalkInd, na.rm = TRUE)  # Calculate average walkability index\n  )\n\n# Join the average price back to the original spatial dataset\nny_block_groups_with_price &lt;- ny_block_groups |&gt;\n  left_join(private_room_avg_price, by = c(\"GEOID\" = \"GEOID\"))"
+  },
+  {
+    "objectID": "individual.html#visualizing-the-average-price-distribution",
+    "href": "individual.html#visualizing-the-average-price-distribution",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Visualizing the Average Price Distribution",
+    "text": "Visualizing the Average Price Distribution\n\n\nShow the code\n# Create a color palette for the heatmap\npal &lt;- colorNumeric(\n  palette = \"YlOrRd\",  # Choose a heatmap color palette\n  domain = ny_block_groups_with_price$avg_price,  # Domain of average prices\n  na.color = \"transparent\"  # Handle missing values\n)\n\n# Create the Leaflet map with a heatmap-like color gradient\nleaflet(data = ny_block_groups_with_price) |&gt;\n  addTiles() |&gt;  # Add default OpenStreetMap tiles\n  addPolygons(\n    fillColor = ~pal(avg_price),  # Use color palette for the fill color\n    color = \"black\",              # Border color\n    weight = 1,                   # Border weight\n    fillOpacity = 0.7,            # Transparency for the fill\n    popup = ~paste0(\n      \"GEOID: \", GEOID, \"&lt;br&gt;\",\n      \"Average Price: $\", round(avg_price, 2)\n    )\n  ) |&gt;\n  addLegend(\n    pal = pal, values = ny_block_groups_with_price$avg_price,\n    position = \"bottomright\",\n    title = \"Average Price\",\n    opacity = 1\n  ) |&gt;\n  setView(lng = -73.935242, lat = 40.730610, zoom = 12)  # Center on NYC"
+  },
+  {
+    "objectID": "individual.html#walkabilty-index-visualization",
+    "href": "individual.html#walkabilty-index-visualization",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Walkabilty index Visualization",
+    "text": "Walkabilty index Visualization\nNow we would create a heatmap to visualize the Walkability Index across different neighborhoods in New York City.\n\n\nShow the code\n# Create a color palette for the heatmap\npal &lt;- colorNumeric(\n  palette = \"Greens\",  # Green color palette\n  domain = ny_block_groups_with_price$avg_NatWalkInd,  # Domain of average prices\n  na.color = \"transparent\"  # Handle missing values\n)\n# Create the Leaflet map with a heatmap-like color gradient\nleaflet(data = ny_block_groups_with_price) |&gt;\n  addTiles() |&gt;  # Add default OpenStreetMap tiles\n  addPolygons(\n    fillColor = ~pal(avg_NatWalkInd),  # Use color palette for the fill color\n    color = \"black\",              # Border color\n    weight = 1,                   # Border weight\n    fillOpacity = 0.7,            # Transparency for the fill\n    popup = ~paste0(\n      \"GEOID: \", GEOID, \"&lt;br&gt;\",\n      \"Walkability Index\", round(avg_NatWalkInd, 2)\n    )\n  ) |&gt;\n  addLegend(\n    pal = pal, values = ny_block_groups_with_price$avg_NatWalkInd,\n    position = \"bottomright\",\n    title = \"Walkability Index\",\n    opacity = 1\n  ) |&gt;\n  setView(lng = -73.935242, lat = 40.730610, zoom = 12)  # Center on NYC"
+  },
+  {
+    "objectID": "individual.html#insights",
+    "href": "individual.html#insights",
+    "title": "Airbnb Project / Walkability Index",
+    "section": "Insights",
+    "text": "Insights\n\nWalkability has a small, but statistically significant, effect on Airbnb prices.\nFactors like amenities, neighborhood features, and room size likely have a bigger impact.\nMore detailed analysis with additional factors could give a clearer picture of what drives Airbnb pricing.\n\n\nRecommendations\n\nAdd More Factors:\n\nInclude details like nearby parks, grocery stores, schools, and crime rates.\nLook at things like nightlife, noise levels, and access to public transport.\n\nUse More Geographic Data:\n\nCombine the Walkability Index with data on transit stops, street layout, and nearby shops.\nCreate maps to see how prices vary by location and walkability.\n\nCompare Different Segments:\n\nStudy how walkability affects different property types, like shared rooms versus entire homes.\nLook at differences between cities, suburbs, and rural areas.\n\nRefine Walkability Measures:\n\nFocus on specific parts of the Walkability Index, like pedestrian-friendly streets or access to daily necessities.\nAdd data like real-time foot traffic or reviews about walkability.\n\nTry Advanced Methods:\n\nUse other machine learning to find out which factors matter most for prices.\nGroup neighborhoods by similar walkability and pricing patterns for better insights."
   }
 ]
