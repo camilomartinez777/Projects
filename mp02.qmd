@@ -395,7 +395,7 @@ Traditionally, a movie's success is also evaluated by the revenue it generates. 
 ## Movie Revenue Table
 
 | Successful Movies and Revenue                               | Unsuccessful Movies, Money Lost                     |
-|--------------------------------------|----------------------------------|
+|-------------------------------------------------------------|-----------------------------------------------------|
 | Avatar (\$2.92 billion)                                     | John Carter (-\$0.20 billion)                       |
 | Avatar: The Way of Water (\$2.32 billion)                   | The Lone Ranger (-\$0.19 billion)                   |
 | Titanic (\$2.25 billion)                                    | Mars Needs Moms (-\$0.15 billion)                   |
